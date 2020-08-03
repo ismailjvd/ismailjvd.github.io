@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css?family=Sen:700');
+
+body {
+    margin: 0px;
+    padding: 0px;
+    font-family: 'Sen', sans-serif;
+}
+
+#main-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(0.98);
+}

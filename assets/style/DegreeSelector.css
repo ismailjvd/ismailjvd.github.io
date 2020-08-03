@@ -1,0 +1,56 @@
+#degree-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font: bold 22px Sen, sans-serif;
+	margin-bottom: 12px;
+}
+
+.all-filters {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+    align-items: center;
+    font: bold 22px Sen, sans-serif;
+}
+
+.filter-container {
+	margin: 0 4px;
+}
+
+select {
+	font: bold 18px Sen, sans-serif;
+	width: auto;
+}
+  
+select:focus {
+	outline: none;
+}
+
+.filter {
+	margin: 6px;
+	padding: 4px;
+	width: 250px;
+}
+
+#button-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-content: center;
+    width: 96%;
+    margin: 4px;
+    padding: 4px;
+}
+
+#button-container button {
+    width: 45%;
+    padding: 4px;
+    margin: 4px;
+    border-radius: 8px;
+    background-color: #6898f3;
+    font: normal 18px Sen, sans-serif;
+    color: white;
+    outline: none;
+}
