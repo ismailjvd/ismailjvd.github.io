@@ -188,12 +188,7 @@ class DegreeSelector extends React.Component<DegreeSelectorProps> {
         } else {
             chosenMinors.splice(index - 1, 1);
             minors.splice(index - 1, 1);
-            if (index === chosenMinors.length) {
-                shouldUpdate = false;
-                resetMinors = false;
-            } else {
-                newDegree = chosenMinors[index];
-            }
+            newDegree = chosenMinors[index-1];
         }
 
         if (shouldUpdate) {
@@ -201,22 +196,6 @@ class DegreeSelector extends React.Component<DegreeSelectorProps> {
                 resetMajors, resetMinors, newDegree, index, type === "Minor");
         }
     }
-
-    state = {
-        majors: [
-            DegreeFilter({
-                label: "Major", 
-                index: 1,
-                degrees: [],
-                newDegree: degreeData.getSortedMajors()[0],
-                changeFunction: this.handleFilterChange,
-                caller: "add",
-                removeClickHandler: this.removeFilter
-            })
-        ],
-        minors: [],
-    }
-
 
     addMajor = () => {
         if (this.canAddMajor()) {
@@ -304,7 +283,6 @@ class DegreeSelector extends React.Component<DegreeSelectorProps> {
                 defaultMinor = degreeData.getSortedMinors()[++i];
             }
         }
-
         return i;
     }
 
@@ -315,14 +293,46 @@ class DegreeSelector extends React.Component<DegreeSelectorProps> {
     canAddMinor = () => {
         return this.getDefaultMinorIndex() < degreeData.getSortedMinors().length;
     }
+
+    getInitialState = () => {
+        let majors: Array<any> = this.props.chosenMajors.map((major, index) =>
+            DegreeFilter({
+                label: "Major", 
+                index: index+1,
+                degrees: this.props.chosenMajors.slice(0, index),
+                newDegree: major,
+                changeFunction: this.handleFilterChange,
+                caller: "add",
+                removeClickHandler: this.removeFilter
+            })
+        )
+        let minors: Array<any> = this.props.chosenMinors.map((minor, index) =>
+            DegreeFilter({
+                label: "Minor", 
+                index: index+1,
+                degrees: this.props.chosenMajors.concat(this.props.chosenMinors.slice(0, index)),
+                newDegree: minor,
+                changeFunction: this.handleFilterChange,
+                caller: "add",
+                removeClickHandler: this.removeFilter
+            })
+        )
+        return {
+            majors: majors,
+            minors: minors
+        }
+    }
+
+    state = this.getInitialState()
     
     render() {
         const majorButtonClass = this.canAddMajor() ? "active" : "inactive";
         const minorButtonClass = this.canAddMinor() ? "active" : "inactive";
+        const state = this.getInitialState();
         return (
             <div id="degree-selector" className="all-filters">
-                {this.state.majors}
-                {this.state.minors}
+                {state.majors}
+                {state.minors}
                 <div id="button-container">
                     <button id="add-major" onClick={this.addMajor} className={majorButtonClass}>+ Add Major</button>
                     <button id="add-minor" onClick={this.addMinor} className={minorButtonClass}>+ Add Minor</button>
