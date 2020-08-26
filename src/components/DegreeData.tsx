@@ -25,23 +25,34 @@ class DegreeData {
         return this._sortedMinors;
     }
 
-    getSortedBreadths(): Array<string> {
-        return this._sortedBreadths;
-    }
-
-    getSortedUpperDivs(majors): Array<string> {
-        const upperDivLists = majors.map(major => data.majors[major].classes.upperDivs);
-        return union.apply(_, upperDivLists).sort();
-    }
-
     getSortedLowerDivs(majors): Array<string> {
         const lowerDivLists = majors.map(major => data.majors[major].classes.lowerDivs);
         return union.apply(_, lowerDivLists).sort();
     }
 
-    getSortedMinorCourses(minors): Array<string> {
-        const minorCoursesLists = minors.map(minor => data.minors[minor].minorCourses);
-        return union.apply(_, minorCoursesLists).sort();
+    getSortedUpperDivs(majors): Array<string> {
+        const lowerDivs = this.getSortedLowerDivs(majors);
+        const upperDivLists = majors.map(major => data.majors[major].classes.upperDivs);
+        return union.apply(_, upperDivLists).sort().filter(course => lowerDivs.indexOf(course) === -1);
+    }
+
+    getSortedBreadths(majors, minors): Array<string> {
+        const lowerDivs = this.getSortedLowerDivs(majors);
+        const upperDivs = this.getSortedUpperDivs(majors);
+        const minorCourses = this.getSortedMinorCourses(majors, minors);
+        return this._sortedBreadths.filter(course => {
+            return (lowerDivs.indexOf(course) === -1 && upperDivs.indexOf(course) === -1 &&
+                minorCourses.indexOf(course) === -1);
+        })
+    }
+
+    getSortedMinorCourses(majors, minors): Array<string> {
+        const lowerDivs = this.getSortedLowerDivs(majors);
+        const upperDivs = this.getSortedUpperDivs(majors);
+        const minorCoursesLists = minors.map(minor => data.minors[minor].minorCourses);    
+        return union.apply(_, minorCoursesLists).sort().filter(course => 
+            (lowerDivs.indexOf(course) === -1 && upperDivs.indexOf(course) === -1)
+        )
     }
 }
 

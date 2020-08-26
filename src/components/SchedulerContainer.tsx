@@ -2,6 +2,7 @@ import * as React from 'react';
 import CourseList from './CourseList';
 import { ListItem } from './CourseList';
 import { string } from 'prop-types';
+import { _ } from 'lodash';
 
 type SchedulerProperties = {
     majors: Array<string>,
@@ -56,7 +57,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         const classLists: Array<string> = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
         return (
             source !== dest && 
-            (classLists.indexOf(dest) === -1 || classLists.indexOf(source) === -1)
+            (!this.isClassList(dest) || !this.isClassList(source))
         )
     }
 
@@ -64,15 +65,25 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         const course = this.draggedItem.props.name;
         const index = this.draggedItem.props.index;
         const source = this.draggedItem.props.currentList;
+        const classLists: Array<string> = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
         console.log(course, source, dest);
         if (this.isValidMovement(source, dest)) {
-            let list_1: Array<string> = this.props[source];
-            let list_2: Array<string> = this.props[dest];
-            list_1.splice(index, 1);
-            list_2.push(course);
-            this.props.updateLists(source, dest, list_1, list_2);
+            let list1: Array<string> = this.props[source];
+            let list2: Array<string> = this.props[dest];
+            list1.splice(index, 1);
+            if (this.isClassList(dest)) {
+                list2.splice(_.sortedIndex(list2, course), 0, course);
+            } else {
+                list2.push(course);
+            }
+            this.props.updateLists(source, dest, list1, list2);
         }
         this.setDraggedItem(undefined);
+    }
+
+    isClassList(listId: string): boolean {
+        const classLists: Array<string> = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
+        return classLists.indexOf(listId) !== -1;
     }
 
     render() {
