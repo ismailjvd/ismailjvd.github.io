@@ -4,6 +4,7 @@ body {
     margin: 0px;
     padding: 0px;
     font-family: 'Sen', sans-serif;
+    overflow-x: hidden;
 }
 
 #main-container {
@@ -21,4 +22,9 @@ button:hover {
 
 button:active {
     transform: scale(0.98);
+}
+
+.empty-div {
+    display: none;
+    visibility: hidden;
 }

@@ -1,0 +1,46 @@
+.course-list {
+    background: #eeeeee;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    margin: 8px;
+    width: 30%;
+    height: 100px;
+}
+
+div::-webkit-scrollbar {
+	width: 3px;
+}
+
+div::-webkit-scrollbar-track {
+	border-radius: 100px;
+}
+
+div::-webkit-scrollbar-thumb {
+	background: rgb(195, 195, 195);
+	border-radius: 20px;
+}
+
+.drag-over {
+    background-color: #dddddd;
+}
+
+.list-item {
+    background: #cccccc;
+    border-radius: 4px;
+    text-align: center;
+    padding: 4px;
+    margin: 4px;
+}
+
+.list-item:hover {
+    cursor: grab;
+}
+
+.list-item:active {
+    cursor: grabbing;
+}
+
+.dragging {
+    opacity: 0.6;
+    cursor: grabbing;
+}

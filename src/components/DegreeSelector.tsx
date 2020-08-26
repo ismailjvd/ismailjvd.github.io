@@ -1,21 +1,11 @@
 import * as React from 'react';
-import data from '../../assets/data/degrees.json';
+import degreeData from './DegreeData';
 import { faMinusCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 // Constants for maximum number of majors / minors user can choose
 const MAX_MAJORS = 2;
 const MAX_MINORS = 2;
-
-// Lists will contain a sorted list of majors
-let sortedMajors: Array<String> = [];
-let sortedMinors: Array<String> = [];
-Object.keys(data["majors"]).sort().forEach((degree) => {
-    sortedMajors.push(degree)
-})
-Object.keys(data["minors"]).sort().forEach((degree) => {
-    sortedMinors.push(degree)
-})
 
 /* Creates a degree filter
     props: {
@@ -30,9 +20,9 @@ function DegreeFilter(props) {
     let allDegrees = [];
 
     if (props.label === "Major") {
-        allDegrees = sortedMajors;
+        allDegrees = degreeData.getSortedMajors();
     } else if (props.label === "Minor") {
-        allDegrees = sortedMinors;
+        allDegrees = degreeData.getSortedMinors();
     } else {
         throw new Error("invalid label (should be Major or Minor)")
     }
@@ -60,7 +50,13 @@ function DegreeFilter(props) {
     )
 }
 
-class DegreeSelector extends React.Component {
+interface DegreeSelectorProps extends React.Props<any> {
+    chosenMajors: Array<string>;
+    chosenMinors: Array<string>;
+    updateParent: (majors, minors) => void;
+}
+
+class DegreeSelector extends React.Component<DegreeSelectorProps> {
 
     updateFilters = (majors, minors, chosenMajors, chosenMinors, updateMajors, updateMinors, newDegree, index, isMinor) => {
         // Resets major filters if they haven't been removed
@@ -107,25 +103,25 @@ class DegreeSelector extends React.Component {
         }
         this.setState({
             majors: majors,
-            minors: minors,
-            chosenMajors: chosenMajors,
-            chosenMinors: chosenMinors
-        }, () => console.log(this.state))
+            minors: minors
+        })
+
+        this.props.updateParent(chosenMajors, chosenMinors);
     }
 
     // Updates all filters after a select item is changed. May remove filters.
-    handleFilterChange = (newDegree: String, type: "Major" | "Minor", index: number) => {
+    handleFilterChange = (newDegree: string, type: "Major" | "Minor", index: number) => {
 
         let majors = [...this.state.majors];
         let minors = [...this.state.minors];
-        let chosenMajors = [...this.state.chosenMajors];
-        let chosenMinors = [...this.state.chosenMinors];
+        let chosenMajors = [...this.props.chosenMajors];
+        let chosenMinors = [...this.props.chosenMinors];
 
         let resetMajors = true;
         let resetMinors = chosenMinors.length > 0;
 
         // Condition can only be met by the first filter. Removes all other filters if the selected major is already chosen
-        if (this.state.chosenMajors.indexOf(newDegree) !== -1) {
+        if (this.props.chosenMajors.indexOf(newDegree) !== -1) {
             majors = [DegreeFilter({
                 label: "Major",
                 index: 1,
@@ -140,7 +136,7 @@ class DegreeSelector extends React.Component {
             chosenMinors = []
             resetMajors = false;
             resetMinors = false;
-        } else if (this.state.chosenMinors.indexOf(newDegree) !== -1) {
+        } else if (this.props.chosenMinors.indexOf(newDegree) !== -1) {
             // Major change that matches a minor will remove all minors
             if (type === "Major") {
                 minors = []
@@ -165,8 +161,8 @@ class DegreeSelector extends React.Component {
     removeFilter = (index, type) => {
         let majors = [...this.state.majors];
         let minors = [...this.state.minors];
-        let chosenMajors = [...this.state.chosenMajors];
-        let chosenMinors = [...this.state.chosenMinors];
+        let chosenMajors = [...this.props.chosenMajors];
+        let chosenMinors = [...this.props.chosenMinors];
 
         let resetMajors = false;
         let resetMinors = chosenMinors.length > 0;
@@ -212,15 +208,13 @@ class DegreeSelector extends React.Component {
                 label: "Major", 
                 index: 1,
                 degrees: [],
-                newDegree: sortedMajors[0],
+                newDegree: degreeData.getSortedMajors()[0],
                 changeFunction: this.handleFilterChange,
                 caller: "add",
                 removeClickHandler: this.removeFilter
             })
         ],
         minors: [],
-        chosenMajors: [sortedMajors[0]],
-        chosenMinors: []
     }
 
 
@@ -228,11 +222,11 @@ class DegreeSelector extends React.Component {
         if (this.canAddMajor()) {
             let majors = [...this.state.majors];
             const index = majors.length + 1;
-            const defaultMajor = sortedMajors[this.getDefaultMajorIndex()]
+            const defaultMajor = degreeData.getSortedMajors()[this.getDefaultMajorIndex()]
             const props = {
                 label: "Major", 
                 index: index, 
-                degrees: [...this.state.chosenMajors],
+                degrees: [...this.props.chosenMajors],
                 newDegree: defaultMajor,
                 changeFunction: this.handleFilterChange,
                 caller: "add",
@@ -243,9 +237,9 @@ class DegreeSelector extends React.Component {
             this.setState({
                 majors: majors,
                 minors: this.state.minors,
-                chosenMajors:[...this.state.chosenMajors].concat(defaultMajor),
-                chosenMinors: this.state.chosenMinors
             })
+
+            this.props.updateParent([...this.props.chosenMajors].concat(defaultMajor), this.props.chosenMinors);
         }
     }
 
@@ -253,11 +247,11 @@ class DegreeSelector extends React.Component {
         if (this.canAddMinor()) {
             let minors = [...this.state.minors];
             const index = minors.length + 1;
-            let defaultMinor = sortedMinors[this.getDefaultMinorIndex()];
+            let defaultMinor = degreeData.getSortedMinors()[this.getDefaultMinorIndex()];
             const props = {
                 label: "Minor", 
                 index: index,
-                degrees: [...this.state.chosenMinors].concat(this.state.chosenMajors),
+                degrees: [...this.props.chosenMinors].concat(this.props.chosenMajors),
                 newDegree: defaultMinor,
                 changeFunction: this.handleFilterChange,
                 caller: "add",
@@ -268,26 +262,26 @@ class DegreeSelector extends React.Component {
             this.setState({
                 majors: this.state.majors,
                 minors: minors,
-                chosenMajors: this.state.chosenMajors,
-                chosenMinors:[...this.state.chosenMinors].concat(defaultMinor),
             })
+
+            this.props.updateParent(this.props.chosenMajors, [...this.props.chosenMinors].concat(defaultMinor));
         }
     }
 
     getDefaultMajorIndex = () => {
         let majors = [...this.state.majors];
         const index = majors.length + 1;
-        let i = sortedMajors.length;
+        let i = degreeData.getSortedMajors().length;
 
-        if (index <= MAX_MAJORS && this.state.chosenMajors.length < sortedMajors.length) {
-            let defaultMajor = sortedMajors[0]
+        if (index <= MAX_MAJORS && this.props.chosenMajors.length < degreeData.getSortedMajors().length) {
+            let defaultMajor = degreeData.getSortedMajors()[0]
             i = 0;
-            while (i<sortedMajors.length) {
-                if (this.state.chosenMajors.indexOf(defaultMajor) === -1 && 
-                    this.state.chosenMinors.indexOf(defaultMajor) === -1) {
+            while (i<degreeData.getSortedMajors().length) {
+                if (this.props.chosenMajors.indexOf(defaultMajor) === -1 && 
+                    this.props.chosenMinors.indexOf(defaultMajor) === -1) {
                     break;
                 }
-                defaultMajor = sortedMajors[++i];
+                defaultMajor = degreeData.getSortedMajors()[++i];
             }
         }
 
@@ -297,17 +291,17 @@ class DegreeSelector extends React.Component {
     getDefaultMinorIndex = () => {
         let minors = [...this.state.minors];
         const index = minors.length + 1;
-        let i = sortedMinors.length;
+        let i = degreeData.getSortedMinors().length;
 
-        if (index <= MAX_MINORS && this.state.chosenMinors.length < sortedMinors.length) {
-            let defaultMinor = sortedMinors[0]
+        if (index <= MAX_MINORS && this.props.chosenMinors.length < degreeData.getSortedMinors().length) {
+            let defaultMinor = degreeData.getSortedMinors()[0]
             i = 0;
-            while (i<sortedMinors.length) {
-                if (this.state.chosenMinors.indexOf(defaultMinor) === -1 && 
-                    this.state.chosenMajors.indexOf(defaultMinor) === -1) {
+            while (i<degreeData.getSortedMinors().length) {
+                if (this.props.chosenMinors.indexOf(defaultMinor) === -1 && 
+                    this.props.chosenMajors.indexOf(defaultMinor) === -1) {
                     break;
                 }
-                defaultMinor = sortedMinors[++i];
+                defaultMinor = degreeData.getSortedMinors()[++i];
             }
         }
 
@@ -315,11 +309,11 @@ class DegreeSelector extends React.Component {
     }
 
     canAddMajor = () => {
-        return this.getDefaultMajorIndex() < sortedMajors.length;
+        return this.getDefaultMajorIndex() < degreeData.getSortedMajors().length;
     }
 
     canAddMinor = () => {
-        return this.getDefaultMinorIndex() < sortedMinors.length;
+        return this.getDefaultMinorIndex() < degreeData.getSortedMinors().length;
     }
     
     render() {

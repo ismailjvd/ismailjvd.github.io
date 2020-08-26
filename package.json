@@ -15,7 +15,10 @@
     "@fortawesome/free-solid-svg-icons": "^5.14.0",
     "@fortawesome/react-fontawesome": "^0.1.11",
     "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react-beautiful-dnd": "^13.0.0",
+    "react-dom": "^16.13.1",
+    "react-window": "^1.8.5",
+    "styled-components": "^5.1.1"
   },
   "devDependencies": {
     "@types/react": "^16.9.44",
