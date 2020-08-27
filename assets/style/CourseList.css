@@ -5,11 +5,15 @@
     height: 120px;
 }
 
+.minor-selected .list-wrapper {
+    width: 22%;
+}
+
 .course-list {
     position: absolute;
     top: 0px;
     left: 0px;
-    background: #eeeeee;
+    background-color: rgb(231, 231, 231);
     overflow-x: hidden;
     overflow-y: scroll;
     width: 100%;
@@ -85,4 +89,22 @@ div::-webkit-scrollbar-thumb {
 
 .no-drop {
     background-color: rgb(255, 197, 197);
+}
+
+@media (max-width: 740px) {
+    .minor-selected .list-wrapper {
+        width: 46%;
+    }
+}
+
+@media (max-width: 660px) {
+    .list-wrapper {
+        width: 96%;
+    }
+}
+
+@media (max-width: 520px) {
+    .minor-selected .list-wrapper {
+        width: 96%;
+    }
 }

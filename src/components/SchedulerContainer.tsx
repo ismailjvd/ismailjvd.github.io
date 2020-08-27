@@ -130,9 +130,13 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         this.lists = degreeData.getOriginalLists(this.props.majors, this.props.minors);
         const classLists = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
         const scheduleLists = ["fa1List"];
+        let cn = "lists-container";
+        if (this.props.minors.length > 0) {
+            cn += " minor-selected"
+        }
         return (
             <div id="schedule-container">
-                <div id="course-lists-container" className="lists-container">
+                <div id="course-lists-container" className={cn}>
                     {classLists.map(listId => 
                         <CourseList
                             key={listId}
