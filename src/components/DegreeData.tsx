@@ -54,6 +54,22 @@ class DegreeData {
             (lowerDivs.indexOf(course) === -1 && upperDivs.indexOf(course) === -1)
         )
     }
+
+    getOriginalLists(majors, minors) {
+        const lowerDivs = this.getSortedLowerDivs(majors);
+        const upperDivs = this.getSortedUpperDivs(majors);
+        const minorCourses = this.getSortedMinorCourses(majors, minors);
+        const breadths = this.getSortedBreadths(majors, minors);
+        const res = {
+            lowerDivs: lowerDivs,
+            upperDivs: upperDivs,
+            minorCourses: minorCourses,
+            breadths: breadths
+        }
+        console.log("getOriginalLists")
+        console.log(res);
+        return res;
+    }
 }
 
 const degreeData = DegreeData.getInstance();

@@ -11,84 +11,74 @@ import "../assets/style/App.css";
 import "../assets/style/Header.css";
 import "../assets/style/DegreeSelector.css";
 import "../assets/style/SchedulerContainer.css";
-import "../assets/style/CourseList.css"
+import "../assets/style/CourseList.css";
 
-class App extends React.Component {
-
-    state = {
+const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
+    let state = {
         chosenMajors: [degreeData.getSortedMajors()[0]],
         chosenMinors: [],
-        lowerDivList: degreeData.getSortedLowerDivs([degreeData.getSortedMajors()[0]]),
-        upperDivList: degreeData.getSortedUpperDivs([degreeData.getSortedMajors()[0]]),
-        breadthList: degreeData.getSortedBreadths(),
-        minorList: degreeData.getSortedMinorCourses([]),
+        lowerDivList: [],
+        upperDivList: [],
+        breadthList: [],
+        minorList: [],
         fa1List: []
     }
-
-    getInitialState = () => {
-        let state = this.state;
-        if (localStorage["currState"]) {
-            state = this.getStateFromCache("currState")
-        }
-        const cacheKey = this.getCacheKey(state.chosenMajors, state.chosenMinors);
-        if (localStorage[cacheKey]) {
-            state = this.getStateFromCache(cacheKey);
-        } else {
-            state.lowerDivList = degreeData.getSortedLowerDivs(state.chosenMajors)
-            state.upperDivList = degreeData.getSortedUpperDivs(state.chosenMajors)
-            state.breadthList = degreeData.getSortedBreadths(),
-            state.minorList = degreeData.getSortedMinorCourses(state.chosenMinors),
-            state.fa1List = []
-        }
-        return state;
+    if (localStorage["currState"]) {
+        state = getStateFromCache("currState")
     }
+    if (majors) {
+        state.chosenMajors = majors;
+    }
+    if (minors) {
+        state.chosenMinors = minors;
+    }
+    const cacheKey = getCacheKey(state.chosenMajors, state.chosenMinors);
+    if (localStorage[cacheKey]) {
+        state = getStateFromCache(cacheKey);
+    } else {
+        state.lowerDivList = degreeData.getSortedLowerDivs(state.chosenMajors)
+        state.upperDivList = degreeData.getSortedUpperDivs(state.chosenMajors)
+        state.breadthList = degreeData.getSortedBreadths(state.chosenMajors, state.chosenMinors),
+        state.minorList = degreeData.getSortedMinorCourses(state.chosenMajors, state.chosenMinors),
+        state.fa1List = []
+    }
+    return state;
+}
+
+const cacheState = (key, state) => {
+    localStorage[key] = JSON.stringify(state);
+    localStorage["currState"] = JSON.stringify(state);
+}
+
+const getStateFromCache = (key) => {
+    return JSON.parse(localStorage[key]);
+}
+
+const getCacheKey = (majors, minors) => {
+    const degrees = JSON.stringify(majors) + ";" + JSON.stringify(minors);
+    return degrees;
+}
+
+class App extends React.Component {
+    
+    state = getInitialState();
 
     updateChosenDegrees = (majors, minors) => {
-        const newState = {
-            chosenMajors: majors,
-            chosenMinors: minors,
-            lowerDivList: degreeData.getSortedLowerDivs(majors),
-            upperDivList: degreeData.getSortedUpperDivs(majors),
-            breadthList: degreeData.getSortedBreadths(),
-            minorList: degreeData.getSortedMinorCourses(minors),
-            fa1List: []
-        }
-        this.cacheState("currState", newState);
+        const newState = getInitialState(majors, minors);
+        cacheState("currState", newState);
         this.setState(newState);
     }
 
     updateLists = (source:string, dest:string, list1: Array<string>, list2: Array<string>) => {
-        let newState = {
-            chosenMajors: this.state.chosenMajors,
-            chosenMinors: this.state.chosenMinors,
-            lowerDivList: this.state.lowerDivList,
-            upperDivList: this.state.upperDivList,
-            breadthList: this.state.breadthList,
-            minorList: this.state.minorList,
-            fa1List: this.state.fa1List
-        }
+        let newState = getInitialState();
         newState[source] = list1;
         newState[dest] = list2;
-        this.cacheState(this.getCacheKey(newState.chosenMajors, newState.chosenMinors), newState);
+        cacheState(getCacheKey(newState.chosenMajors, newState.chosenMinors), newState);
         this.setState(newState);
     }
 
-    cacheState = (key, state) => {
-        localStorage[key] = JSON.stringify(state);
-        localStorage["currState"] = JSON.stringify(state);
-    }
-
-    getStateFromCache = (key) => {
-        return JSON.parse(localStorage[key]);
-    }
-
-    getCacheKey = (majors, minors) => {
-        const degrees = JSON.stringify(majors) + ";" + JSON.stringify(minors);
-        return degrees;
-    }
-
     render() {
-        let state = this.getInitialState();
+        let state = this.state;
         return (
             <div id="main-container">
                 <Header />
