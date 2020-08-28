@@ -66,8 +66,6 @@ class DegreeData {
             minorCourses: minorCourses,
             breadths: breadths
         }
-        console.log("getOriginalLists")
-        console.log(res);
         return res;
     }
 }

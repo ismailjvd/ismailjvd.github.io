@@ -17,11 +17,6 @@ const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     let state = {
         chosenMajors: [degreeData.getSortedMajors()[0]],
         chosenMinors: [],
-        lowerDivList: [],
-        upperDivList: [],
-        breadthList: [],
-        minorList: [],
-        fa1List: []
     }
     if (localStorage["currState"]) {
         state = getStateFromCache("currState")
@@ -31,16 +26,6 @@ const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     }
     if (minors) {
         state.chosenMinors = minors;
-    }
-    const cacheKey = getCacheKey(state.chosenMajors, state.chosenMinors);
-    if (localStorage[cacheKey]) {
-        state = getStateFromCache(cacheKey);
-    } else {
-        state.lowerDivList = degreeData.getSortedLowerDivs(state.chosenMajors)
-        state.upperDivList = degreeData.getSortedUpperDivs(state.chosenMajors)
-        state.breadthList = degreeData.getSortedBreadths(state.chosenMajors, state.chosenMinors),
-        state.minorList = degreeData.getSortedMinorCourses(state.chosenMajors, state.chosenMinors),
-        state.fa1List = []
     }
     return state;
 }
@@ -54,11 +39,6 @@ const getStateFromCache = (key) => {
     return JSON.parse(localStorage[key]);
 }
 
-const getCacheKey = (majors, minors) => {
-    const degrees = JSON.stringify(majors) + ";" + JSON.stringify(minors);
-    return degrees;
-}
-
 class App extends React.Component {
     
     state = getInitialState();
@@ -66,14 +46,6 @@ class App extends React.Component {
     updateChosenDegrees = (majors, minors) => {
         const newState = getInitialState(majors, minors);
         cacheState("currState", newState);
-        this.setState(newState);
-    }
-
-    updateLists = (source:string, dest:string, list1: Array<string>, list2: Array<string>) => {
-        let newState = getInitialState();
-        newState[source] = list1;
-        newState[dest] = list2;
-        cacheState(getCacheKey(newState.chosenMajors, newState.chosenMinors), newState);
         this.setState(newState);
     }
 
@@ -90,12 +62,6 @@ class App extends React.Component {
                 <SchedulerContainer 
                     majors={state.chosenMajors} 
                     minors={state.chosenMinors}
-                    lowerDivList={state.lowerDivList}
-                    upperDivList={state.upperDivList}
-                    breadthList={state.breadthList}
-                    minorList={state.minorList}
-                    fa1List={state.fa1List}
-                    updateLists={this.updateLists}
                 />
                 <Counter />
             </div>

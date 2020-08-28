@@ -1,6 +1,6 @@
 import * as React from 'react';
 import CourseList from './CourseList';
-import { ListItem } from './CourseList';
+import { DraggableItem } from './CourseList';
 import { string } from 'prop-types';
 import degreeData from './DegreeData';
 import { _ } from 'lodash';
@@ -8,12 +8,6 @@ import { _ } from 'lodash';
 type SchedulerProperties = {
     majors: Array<string>,
     minors: Array<string>,
-    lowerDivList: Array<string>,
-    upperDivList: Array<string>,
-    breadthList: Array<string>,
-    minorList: Array<string>,
-    fa1List: Array<string>,
-    updateLists: (source:string, dest:string, list1:Array<string>, list2:Array<string>) => void,
 }
 
 type ListData = {
@@ -23,70 +17,122 @@ type ListData = {
     breadths: Array<string>
 }
 
+const getInitialState = (majors: Array<string>, minors: Array<string>) => {
+    let state = {
+        draggedItem: undefined,
+        clickedItem: undefined,
+        majors: majors,
+        minors: minors,
+        lists: degreeData.getOriginalLists(majors, minors),
+        lowerDivList: [],
+        upperDivList: [],
+        breadthList: [],
+        minorList: [],
+        fa1List: [],
+        fa2List: [],
+        fa3List: [],
+        fa4List: []
+    }
+    const cacheKey = getCacheKey(majors, minors);
+    if (localStorage[cacheKey]) {
+        state = getStateFromCache(cacheKey);
+    } else {
+        state.lowerDivList = degreeData.getSortedLowerDivs(majors)
+        state.upperDivList = degreeData.getSortedUpperDivs(majors)
+        state.breadthList = degreeData.getSortedBreadths(majors, minors),
+        state.minorList = degreeData.getSortedMinorCourses(majors, minors),
+        state.fa1List = [],
+        state.fa2List = [],
+        state.fa3List = [],
+        state.fa4List = []
+    }
+    return state;
+}
+
+const cacheState = (key, state) => {
+    localStorage[key] = JSON.stringify(state);
+}
+
+const getStateFromCache = (key) => {
+    return JSON.parse(localStorage[key]);
+}
+
+const getCacheKey = (majors, minors) => {
+    const degrees = JSON.stringify(majors) + ";" + JSON.stringify(minors);
+    return degrees;
+}
+
 class SchedulerContainer extends React.Component<SchedulerProperties> {
 
-    lists: ListData;
-
-    constructor(props) {
-        super(props);
-        this.lists = degreeData.getOriginalLists(this.props.majors, this.props.minors);
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if(!(_.isEqual(nextProps.majors, prevState.majors) && 
+            (_.isEqual(nextProps.minors, prevState.minors)))) {
+            return getInitialState(nextProps.majors, nextProps.minors);
+        }
+        return null;
     }
 
-    state = { 
-        draggedItem: undefined,
-        clickedItem: undefined    
+    state = getInitialState(this.props.majors, this.props.minors);
+
+    copyState() {
+        return {
+            draggedItem: undefined,
+            clickedItem: undefined,
+            majors: [...this.state.majors],
+            minors: [...this.state.minors],
+            lists: {...this.state.lists},
+            lowerDivList: [...this.state.lowerDivList],
+            upperDivList: [...this.state.upperDivList],
+            breadthList: [...this.state.breadthList],
+            minorList: [...this.state.minorList],
+            fa1List: [...this.state.fa1List],
+            fa2List: [...this.state.fa2List],
+            fa3List: [...this.state.fa3List],
+            fa4List: [...this.state.fa4List]
+        }
     }
 
-    createListItems(listId, courses) {
-        const courseElements = this.props[listId].map((course) => {
-            const key = listId+"-"+course;
-            return (
-                <div key={key} className="random">
-                    {course}
-                </div>
-            )}
-        )
-
-        return (
-            <div id={listId} className="course-list">
-                {courseElements}
-            </div>
-        )
+    updateLists = (source:string, dest:string, list1: Array<string>, list2: Array<string>) => {
+        let newState = this.copyState();
+        newState[source] = list1;
+        newState[dest] = list2;
+        cacheState(getCacheKey(this.props.majors, this.props.minors), newState);
+        this.setState(newState);
     }
 
-    setDraggedItem = (item: ListItem | undefined) => {
+    setDraggedItem = (item: DraggableItem | undefined) => {
         this.setState({
             draggedItem: item
         });
     }
 
-    getDraggedItem = (): ListItem | undefined => {
+    getDraggedItem = (): DraggableItem | undefined => {
         return this.state.draggedItem;
     }
 
-    setClickedItem = (item: ListItem | undefined) => {
+    setClickedItem = (item: DraggableItem | undefined) => {
         this.setState({
             clickedItem: item
         });
     }
 
-    getClickedItem = (): ListItem | undefined => {
+    getClickedItem = (): DraggableItem | undefined => {
         return this.state.clickedItem;
     }
 
     getOriginalListId = (course: string) => {
         let listOrigin: string;
         switch(course) {
-            case this.lists.lowerDivs[this.lists.lowerDivs.indexOf(course)]:
+            case this.state.lists.lowerDivs[this.state.lists.lowerDivs.indexOf(course)]:
                 listOrigin = "lowerDivList";
                 break;
-            case this.lists.upperDivs[this.lists.upperDivs.indexOf(course)]:
+            case this.state.lists.upperDivs[this.state.lists.upperDivs.indexOf(course)]:
                 listOrigin = "upperDivList";
                 break;
-            case this.lists.minorCourses[this.lists.minorCourses.indexOf(course)]:
+            case this.state.lists.minorCourses[this.state.lists.minorCourses.indexOf(course)]:
                 listOrigin = "minorList";
                 break;
-            case this.lists.breadths[this.lists.breadths.indexOf(course)]:
+            case this.state.lists.breadths[this.state.lists.breadths.indexOf(course)]:
                 listOrigin = "breadthList";
                 break;
             default:
@@ -113,23 +159,22 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         const index = this.state.draggedItem.props.index;
         const source = this.state.draggedItem.props.currentList;
         if (source !== dest && this.isValidMovement(source, dest, course)) {
-            let list1: Array<string> = this.props[source];
-            let list2: Array<string> = this.props[dest];
+            let list1: Array<string> = this.state[source];
+            let list2: Array<string> = this.state[dest];
             list1.splice(index, 1);
             if (SchedulerContainer.isClassList(dest)) {
                 list2.splice(_.sortedIndex(list2, course), 0, course);
             } else {
                 list2.push(course);
             }
-            this.props.updateLists(source, dest, list1, list2);
+            this.updateLists(source, dest, list1, list2);
         }
         this.setDraggedItem(undefined);
     }
 
     render() {
-        this.lists = degreeData.getOriginalLists(this.props.majors, this.props.minors);
         const classLists = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
-        const scheduleLists = ["fa1List"];
+        const scheduleLists = ["fa1List", "fa2List", "fa3List", "fa4List"];
         let cn = "lists-container";
         if (this.props.minors.length > 0) {
             cn += " minor-selected"
@@ -141,7 +186,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         <CourseList
                             key={listId}
                             listId={listId}
-                            courses={this.props[listId]} 
+                            courses={this.state[listId]} 
                             setDraggedItem={this.setDraggedItem}
                             getDraggedItem={this.getDraggedItem}
                             setClickedItem={this.setClickedItem}
@@ -157,7 +202,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         <CourseList 
                             key={listId}
                             listId={listId}
-                            courses={this.props[listId]} 
+                            courses={this.state[listId]} 
                             setDraggedItem={this.setDraggedItem}
                             getDraggedItem={this.getDraggedItem}
                             setClickedItem={this.setClickedItem}

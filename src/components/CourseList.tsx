@@ -3,32 +3,42 @@ import * as React from 'react';
 type ListProperties = {
     listId: string;
     courses: Array<string>;
-    setDraggedItem: (item: ListItem | undefined) => void;
-    getDraggedItem: () => ListItem | undefined;
-    setClickedItem: (item: ListItem | undefined) => void;
-    getClickedItem: () => ListItem | undefined;
+    setDraggedItem: (item: DraggableItem | undefined) => void;
+    getDraggedItem: () => DraggableItem | undefined;
+    setClickedItem: (item: DraggableItem | undefined) => void;
+    getClickedItem: () => DraggableItem | undefined;
     isValid: (source, dest, course) => boolean;
     dragItemToList: (listId) => void;
     getOriginalList: (course) => string;
 }
 
-type ListItemProperites = {
+type DraggableItemProperites = {
     name: string;
     index: number;
     currentList: string;
     originalList: string;
     itemClass: string;
-    setDraggedItem: (item: ListItem | undefined) => void;
-    getDraggedItem: () => ListItem | undefined;
-    setClickedItem: (item: ListItem | undefined) => void;
-    getClickedItem: () => ListItem | undefined;
+    setDraggedItem: (item: DraggableItem | undefined) => void;
+    getDraggedItem: () => DraggableItem | undefined;
+    setClickedItem: (item: DraggableItem | undefined) => void;
+    getClickedItem: () => DraggableItem | undefined;
 }
 
-class ListItem extends React.Component<ListItemProperites> {
+const CourseItem = (props) => <div className = {props.className}>{props.name}</div>
+const MemoCourseItem = React.memo(CourseItem);
+
+class DraggableItem extends React.Component<DraggableItemProperites> {
 
     state = {
         dragging: false,
         clicked: false,
+    }
+
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if(!nextProps.getDraggedItem() && prevState.dragging) {
+            return {dragging: false};
+        }
+        return null;
     }
 
     handleDragStart = () => {
@@ -41,11 +51,9 @@ class ListItem extends React.Component<ListItemProperites> {
     }
 
     handleDragEnd = () => {
-        console.log(this.props.getDraggedItem());
-        this.props.setDraggedItem(undefined);
-        this.setState({
-            dragging: false
-        })
+        if (this.props.getDraggedItem()) {
+            this.props.setDraggedItem(undefined);
+        }
     }
 
     render() {
@@ -58,18 +66,21 @@ class ListItem extends React.Component<ListItemProperites> {
         }
         return (
             <div 
-                className={className} 
+                className="draggable-item"
                 draggable="true"
                 onDragStart={this.handleDragStart}
                 onDragEnd={this.handleDragEnd}
             >
-                {this.props.name}
+                <MemoCourseItem
+                    className={className}
+                    name={this.props.name}
+                />
             </div>
         )
     }
 }
 
-const MemoListItem = React.memo(ListItem);
+const MemoDraggableItem = React.memo(DraggableItem);
 
 class CourseList extends React.Component<ListProperties> {
 
@@ -78,6 +89,13 @@ class CourseList extends React.Component<ListProperties> {
     state = {
         dragging: false,
         droppable: true,
+    }
+
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if(!nextProps.getDraggedItem() && prevState.dragging) {
+            return {dragging: false};
+        }
+        return null;
     }
 
     handleDragEnter = (e) => {
@@ -120,12 +138,7 @@ class CourseList extends React.Component<ListProperties> {
         if (this.props.getDraggedItem()) {
             this.props.dragItemToList(this.props.listId);
         }
-        if (this.state.dragging) {
-            this.setState({
-                dragging: false,
-                droppable: true
-            })
-        }
+        e.stopPropagation();
     }
 
     render() {
@@ -133,7 +146,7 @@ class CourseList extends React.Component<ListProperties> {
             return <div className="empty-div"></div>
         }
         let cn = "course-list";
-        let listItemClass = "list-item";
+        let listItemClass = "course-item";
         if (this.props.getDraggedItem()) {
             listItemClass += " dragging-list";
             if (this.state.dragging) {
@@ -151,7 +164,7 @@ class CourseList extends React.Component<ListProperties> {
                     onDrop={this.handleDrop}
                 >
                     {this.props.courses.map((course, index) => 
-                        <MemoListItem 
+                        <MemoDraggableItem 
                             key={index} 
                             name={course} 
                             index={index} 
@@ -162,7 +175,7 @@ class CourseList extends React.Component<ListProperties> {
                             getDraggedItem={this.props.getDraggedItem}
                             setClickedItem={this.props.setClickedItem}
                             getClickedItem={this.props.getClickedItem}
-                        ></MemoListItem>)
+                        ></MemoDraggableItem>)
                     }
                 </div>
             </div>
@@ -173,4 +186,4 @@ class CourseList extends React.Component<ListProperties> {
 
 
 export default CourseList;
-export {ListItem};
+export {DraggableItem};
