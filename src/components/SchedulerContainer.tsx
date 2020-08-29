@@ -181,6 +181,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         }
         return (
             <div id="schedule-container">
+                <div id="course-lists-title" className="lists-title">Your Classes</div>
                 <div id="course-lists-container" className={cn}>
                     {classLists.map(listId => 
                         <CourseList
@@ -197,6 +198,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         />
                     )}
                 </div>
+                <div id="schedule-lists-title" className="lists-title">Your Schedule</div>
                 <div id="schedule-lists-container" className="lists-container">
                     {scheduleLists.map(listId => 
                         <CourseList 
