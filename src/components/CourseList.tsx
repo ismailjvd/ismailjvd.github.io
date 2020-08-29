@@ -1,4 +1,7 @@
 import * as React from 'react';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import SchedulerContainer from './SchedulerContainer';
 
 type ListProperties = {
     listId: string;
@@ -24,8 +27,36 @@ type DraggableItemProperites = {
     getClickedItem: () => DraggableItem | undefined;
 }
 
+type SearchBarProperties = {
+    setFilter: (s:string) => void;
+    value: string;
+}
+
+const listIdToTitle = {
+    "lowerDivList": "Lower Division",
+    "upperDivList": "Upper Division",
+    "breadthList": "Breadths",
+    "minorList": "Minor Courses",
+    "fa1List": "Fall",
+    "fa2List": "Fall",
+    "fa3List": "Fall",
+    "fa4List": "Fall"
+}
+
 const CourseItem = (props) => <div className = {props.className}>{props.name}</div>
 const MemoCourseItem = React.memo(CourseItem);
+
+class SearchBar extends React.Component<SearchBarProperties> {
+    render() {
+        return <input 
+            type="text" 
+            className="list-search-bar" 
+            value={this.props.value} 
+            placeholder="&#xf002;  Search for a class..."
+            onChange={(e) => this.props.setFilter(e.target.value)}
+        />
+    }
+}
 
 class DraggableItem extends React.Component<DraggableItemProperites> {
 
@@ -89,6 +120,7 @@ class CourseList extends React.Component<ListProperties> {
     state = {
         dragging: false,
         droppable: true,
+        filter: ""
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
@@ -141,6 +173,20 @@ class CourseList extends React.Component<ListProperties> {
         e.stopPropagation();
     }
 
+    filteredList = (list: Array<string>) => {
+        if (this.state.filter.length > 0) {
+            const filter = this.state.filter.toUpperCase();
+            return list.filter(course => course.toUpperCase().indexOf(filter) !== -1);
+        }
+        return list;
+    }
+
+    setFilter = (s: string) => {
+        this.setState({
+            filter: s
+        })
+    }
+
     render() {
         if (this.props.courses.length === 0 && this.props.listId === "minorList") {
             return <div className="empty-div"></div>
@@ -153,30 +199,37 @@ class CourseList extends React.Component<ListProperties> {
                 cn = this.state.droppable ? cn + " can-drop" : cn + " no-drop";
             }
         }
+        const courseList = this.filteredList(this.props.courses);
+        const searchBar = SchedulerContainer.isClassList(this.props.listId) ?
+            <SearchBar setFilter={this.setFilter} value={this.state.filter} /> : null;
         return (
             <div className="list-wrapper">
-                <div 
-                    id={this.props.listId} 
-                    className={cn}
-                    onDragEnter={this.handleDragEnter}
-                    onDragOver={this.handleDragOver}
-                    onDragLeave={this.handleDragLeave}
-                    onDrop={this.handleDrop}
-                >
-                    {this.props.courses.map((course, index) => 
-                        <MemoDraggableItem 
-                            key={index} 
-                            name={course} 
-                            index={index} 
-                            currentList={this.props.listId}
-                            itemClass={listItemClass}
-                            originalList={this.props.getOriginalList(course)}
-                            setDraggedItem={this.props.setDraggedItem}
-                            getDraggedItem={this.props.getDraggedItem}
-                            setClickedItem={this.props.setClickedItem}
-                            getClickedItem={this.props.getClickedItem}
-                        ></MemoDraggableItem>)
-                    }
+                <div className="list-title">{listIdToTitle[this.props.listId]}</div>
+                <div className="search-with-list">
+                    {searchBar}
+                    <div 
+                        id={this.props.listId} 
+                        className={cn}
+                        onDragEnter={this.handleDragEnter}
+                        onDragOver={this.handleDragOver}
+                        onDragLeave={this.handleDragLeave}
+                        onDrop={this.handleDrop}
+                    >
+                        {courseList.map((course, index) => 
+                            <MemoDraggableItem 
+                                key={index} 
+                                name={course} 
+                                index={index} 
+                                currentList={this.props.listId}
+                                itemClass={listItemClass}
+                                originalList={this.props.getOriginalList(course)}
+                                setDraggedItem={this.props.setDraggedItem}
+                                getDraggedItem={this.props.getDraggedItem}
+                                setClickedItem={this.props.setClickedItem}
+                                getClickedItem={this.props.getClickedItem}
+                            ></MemoDraggableItem>)
+                        }
+                    </div>
                 </div>
             </div>
         )
