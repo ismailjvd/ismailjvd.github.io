@@ -1,3 +1,5 @@
+/* Normal List Styles */
+
 .list-wrapper {
     position: relative;
     margin: 8px;
@@ -10,7 +12,7 @@
 }
 
 #schedule-lists-container .list-wrapper {
-    width: 46%;
+    width: 45%;
 }
 
 .list-title {
@@ -30,9 +32,8 @@
     font-family: FontAwesome, Calibri, sans-serif;
     font-size: 16px;
     padding: 6px 8px;
-    margin-top: 6px;
-    margin-bottom: 2px;
-    width: 96%;
+    margin: 6px 4px 2px 4px;
+    width: 94%;
     border-radius: 6px;
     border-width: 0px;
 }
@@ -71,9 +72,7 @@ div::-webkit-scrollbar-thumb {
 	border-radius: 20px;
 }
 
-.drag-over {
-    background-color: #dddddd;
-}
+/* Normal Course Items */
 
 .draggable-item {
     margin: 4px;
@@ -98,15 +97,6 @@ div::-webkit-scrollbar-thumb {
     transform: scale(0.98);
 }
 
-.dragging-list {
-    opacity: 0.8;
-}
-
-.dragging {
-    opacity: 0.6;
-    cursor: grabbing;
-}
-
 .course-item.lowerDivList {
     background-color: #cefed0;
 }
@@ -123,6 +113,17 @@ div::-webkit-scrollbar-thumb {
     background-color: rgba(255,194,255,.7);
 }
 
+/* Dragging Modifiers */
+
+.dragging-list {
+    opacity: 0.8;
+}
+
+.dragging {
+    opacity: 0.6;
+    cursor: grabbing;
+}
+
 .can-drop {
     background-color: rgb(211, 211, 211);
 }
@@ -131,13 +132,44 @@ div::-webkit-scrollbar-thumb {
     background-color: rgb(255, 197, 197);
 }
 
+/* Clicking Modifiers */
+
+.clicked {
+    filter: brightness(0.88);
+}
+
+.click-overlay {
+    position: absolute;
+    bottom: 4px;
+    left: 0px;
+    width: 100%;
+    height: 118px;
+    opacity: 0.4;
+}
+
+.can-click {
+    border: dashed 2px black;
+    border-radius: 4px;
+}
+
+.can-click:hover {
+    background-color: rgb(192, 192, 192);
+    cursor: pointer;
+}
+
+.no-click {
+    background-color: rgb(247, 247, 247);
+}
+
+/* Media Modifiers */
+
 @media (max-width: 1200px) {
     .list-search-bar {
         width: 94%;
     }
 }
 
-@media (max-width: 740px) {
+@media (max-width: 780px) {
     .minor-selected .list-wrapper {
         width: 46%;
     }

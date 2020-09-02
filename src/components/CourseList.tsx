@@ -12,6 +12,7 @@ type ListProperties = {
     getClickedItem: () => DraggableItem | undefined;
     isValid: (source, dest, course) => boolean;
     dragItemToList: (listId) => void;
+    clickItemToList: (listId) => void;
     getOriginalList: (course) => string;
 }
 
@@ -40,7 +41,11 @@ const listIdToTitle = {
     "fa1List": "Fall",
     "fa2List": "Fall",
     "fa3List": "Fall",
-    "fa4List": "Fall"
+    "fa4List": "Fall",
+    "sp1List": "Spring",
+    "sp2List": "Spring",
+    "sp3List": "Spring",
+    "sp4List": "Spring"
 }
 
 const CourseItem = (props) => <div className = {props.className}>{props.name}</div>
@@ -69,7 +74,30 @@ class DraggableItem extends React.Component<DraggableItemProperites> {
         if(!nextProps.getDraggedItem() && prevState.dragging) {
             return {dragging: false};
         }
+        if(!nextProps.getClickedItem() && prevState.clicked) {
+            return {clicked: false};
+        }
         return null;
+    }
+
+    handleClick = () => {
+        if (!this.props.getClickedItem()) {
+            this.props.setClickedItem(this);
+            this.setState({
+                clicked: true
+            });
+            document.addEventListener("mousedown", this.handleOutsideClick);
+        }
+    }
+
+    handleOutsideClick = (e) => {
+        document.removeEventListener("mousedown", this.handleOutsideClick);
+        if (!e.target.classList.contains("can-click")) {
+            this.props.setClickedItem(undefined);
+            this.setState({
+                clicked: false
+            });
+        }
     }
 
     handleDragStart = () => {
@@ -101,6 +129,7 @@ class DraggableItem extends React.Component<DraggableItemProperites> {
                 draggable="true"
                 onDragStart={this.handleDragStart}
                 onDragEnd={this.handleDragEnd}
+                onClick={this.handleClick}
             >
                 <MemoCourseItem
                     className={className}
@@ -187,6 +216,31 @@ class CourseList extends React.Component<ListProperties> {
         })
     }
 
+    handleClick = () => {
+        if (this.props.getClickedItem()) {
+            this.props.clickItemToList(this.props.listId);
+        }
+    }
+
+    getClickOverlay = () => {
+        if (this.props.getClickedItem()) {
+            const item: DraggableItem = this.props.getClickedItem();
+            let overlayClass = "click-overlay";
+            if (this.props.isValid(item.props.currentList, this.props.listId, item.props.name)) {
+                overlayClass += " can-click";
+            } else {
+                overlayClass += " no-click";
+            }
+            return (
+                <div
+                    className={overlayClass}
+                    onClick={this.handleClick}
+                />
+            )
+        }
+        return null;
+    }
+
     render() {
         if (this.props.courses.length === 0 && this.props.listId === "minorList") {
             return <div className="empty-div"></div>
@@ -199,6 +253,7 @@ class CourseList extends React.Component<ListProperties> {
                 cn = this.state.droppable ? cn + " can-drop" : cn + " no-drop";
             }
         }
+        const clickOverlay = this.getClickOverlay();
         const courseList = this.filteredList(this.props.courses);
         const searchBar = SchedulerContainer.isClassList(this.props.listId) ?
             <SearchBar setFilter={this.setFilter} value={this.state.filter} /> : null;
@@ -231,6 +286,7 @@ class CourseList extends React.Component<ListProperties> {
                         }
                     </div>
                 </div>
+                {clickOverlay}
             </div>
         )
     }

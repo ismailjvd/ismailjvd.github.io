@@ -29,9 +29,13 @@ const getInitialState = (majors: Array<string>, minors: Array<string>) => {
         breadthList: [],
         minorList: [],
         fa1List: [],
+        sp1List: [],
         fa2List: [],
+        sp2List: [],
         fa3List: [],
-        fa4List: []
+        sp3List: [],
+        fa4List: [],
+        sp4List: []
     }
     const cacheKey = getCacheKey(majors, minors);
     if (localStorage[cacheKey]) {
@@ -42,9 +46,13 @@ const getInitialState = (majors: Array<string>, minors: Array<string>) => {
         state.breadthList = degreeData.getSortedBreadths(majors, minors),
         state.minorList = degreeData.getSortedMinorCourses(majors, minors),
         state.fa1List = [],
+        state.sp1List = [],
         state.fa2List = [],
+        state.sp2List = [],
         state.fa3List = [],
-        state.fa4List = []
+        state.sp3List = [],
+        state.fa4List = [],
+        state.sp4List = []
     }
     return state;
 }
@@ -86,9 +94,13 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             breadthList: [...this.state.breadthList],
             minorList: [...this.state.minorList],
             fa1List: [...this.state.fa1List],
+            sp1List: [...this.state.sp1List],
             fa2List: [...this.state.fa2List],
+            sp2List: [...this.state.sp2List],
             fa3List: [...this.state.fa3List],
-            fa4List: [...this.state.fa4List]
+            sp3List: [...this.state.sp3List],
+            fa4List: [...this.state.fa4List],
+            sp4List: [...this.state.sp4List]
         }
     }
 
@@ -172,9 +184,70 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         this.setDraggedItem(undefined);
     }
 
+    clickItemToList = (dest: string) => {
+        const course = this.state.clickedItem.props.name;
+        const index = this.state.clickedItem.props.index;
+        const source = this.state.clickedItem.props.currentList;
+        this.moveItemToList(source, dest, course, index);
+        this.setClickedItem(undefined);
+    }
+
+    moveItemToList = (source: string, dest: string, course: string, index: number) => {
+        if (source !== dest && this.isValidMovement(source, dest, course)) {
+            let list1: Array<string> = this.state[source];
+            let list2: Array<string> = this.state[dest];
+            list1.splice(index, 1);
+            if (SchedulerContainer.isClassList(dest)) {
+                list2.splice(_.sortedIndex(list2, course), 0, course);
+            } else {
+                list2.push(course);
+            }
+            this.updateLists(source, dest, list1, list2);
+        }
+        this.setDraggedItem(undefined);
+    }
+
+    getYearContainers = () => {
+        const scheduleLists = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        let yearContainers = [];
+        for (let i=0;i<scheduleLists.length;i+=2) {
+            yearContainers.push(
+                <div className="year-container" key={"container-"+scheduleLists[i]+"-"+scheduleLists[i+1]}>
+                    <CourseList 
+                        key={scheduleLists[i]}
+                        listId={scheduleLists[i]}
+                        courses={this.state[scheduleLists[i]]} 
+                        setDraggedItem={this.setDraggedItem}
+                        getDraggedItem={this.getDraggedItem}
+                        setClickedItem={this.setClickedItem}
+                        getClickedItem={this.getClickedItem}
+                        isValid={this.isValidMovement}
+                        dragItemToList={this.dragItemToList}
+                        clickItemToList={this.clickItemToList}
+                        getOriginalList={this.getOriginalListId}
+                    />
+                    <CourseList 
+                        key={scheduleLists[i+1]}
+                        listId={scheduleLists[i+1]}
+                        courses={this.state[scheduleLists[i+1]]} 
+                        setDraggedItem={this.setDraggedItem}
+                        getDraggedItem={this.getDraggedItem}
+                        setClickedItem={this.setClickedItem}
+                        getClickedItem={this.getClickedItem}
+                        isValid={this.isValidMovement}
+                        dragItemToList={this.dragItemToList}
+                        clickItemToList={this.clickItemToList}
+                        getOriginalList={this.getOriginalListId}
+                    />
+                </div>
+            )
+        }
+        return yearContainers;
+    }
+
     render() {
         const classLists = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
-        const scheduleLists = ["fa1List", "fa2List", "fa3List", "fa4List"];
+        const yearContainers = this.getYearContainers();
         let cn = "lists-container";
         if (this.props.minors.length > 0) {
             cn += " minor-selected"
@@ -194,26 +267,14 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                             getClickedItem={this.getClickedItem}
                             isValid={this.isValidMovement}
                             dragItemToList={this.dragItemToList}
+                            clickItemToList={this.clickItemToList}
                             getOriginalList={this.getOriginalListId}
                         />
                     )}
                 </div>
                 <div id="schedule-lists-title" className="lists-title">Your Schedule</div>
                 <div id="schedule-lists-container" className="lists-container">
-                    {scheduleLists.map(listId => 
-                        <CourseList 
-                            key={listId}
-                            listId={listId}
-                            courses={this.state[listId]} 
-                            setDraggedItem={this.setDraggedItem}
-                            getDraggedItem={this.getDraggedItem}
-                            setClickedItem={this.setClickedItem}
-                            getClickedItem={this.getClickedItem}
-                            isValid={this.isValidMovement}
-                            dragItemToList={this.dragItemToList}
-                            getOriginalList={this.getOriginalListId}
-                        />
-                    )}
+                    {yearContainers}
                 </div>
             </div>
         )
