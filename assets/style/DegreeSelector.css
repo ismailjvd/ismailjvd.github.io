@@ -3,7 +3,6 @@
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	font: bold 22px Sen, sans-serif;
 	margin-bottom: 12px;
 }
 
@@ -85,3 +84,23 @@ select:focus {
     visibility: hidden;
 }
 
+@media (max-width: 520px) {
+    .all-filters {
+        font: bold 18px Sen, sans-serif;
+    }
+    select {
+        font: bold 16px Sen, sans-serif;
+    }
+    .filter {
+        width: 220px;
+    }
+    .filter-container {
+        padding-left: 0px;
+    }
+    #button-container button {
+        font: normal 16px Sen, sans-serif;
+    }
+    .remove-filter-button {
+        font-size: 26px;
+    }
+}

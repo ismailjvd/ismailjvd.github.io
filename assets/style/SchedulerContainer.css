@@ -1,9 +1,17 @@
+#schedule-container {
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
 .lists-container {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-around;
-    align-content: center;
+    align-content: flex-start;
     width: 66vw;
     padding: 8px 12px 16px 12px;
     margin: 0px 16px 36px 16px;
@@ -11,6 +19,7 @@
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     box-shadow: 0 2px 8px 2px #ccc;
+    overflow-y: scroll;
 }
 
 .year-container {
@@ -50,5 +59,28 @@
 @media (max-width: 900px) {
     .year-container {
         width: 94%;
+    }
+    #schedule-lists-container {
+        max-height: 416px;
+    }
+}
+
+@media (max-width: 660px) {
+    .lists-container {
+        max-height: 208px;
+    }
+}
+
+@media (max-width: 520px) {
+    .lists-title {
+        width: 91vw;
+        font-size: 20px;
+    }
+    .lists-container {
+        padding: 4px;
+        width: 91vw;
+    }
+    .year-container {
+        margin: 12px 8px;
     }
 }
