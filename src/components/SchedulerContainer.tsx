@@ -4,6 +4,8 @@ import { DraggableItem } from './CourseList';
 import { string } from 'prop-types';
 import degreeData from './DegreeData';
 import { _ } from 'lodash';
+import { faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 type SchedulerProperties = {
     majors: Array<string>,
@@ -57,6 +59,10 @@ const getInitialState = (majors: Array<string>, minors: Array<string>) => {
     return state;
 }
 
+const removeFromCache = (key: string) => {
+    delete localStorage[key];
+}
+
 const cacheState = (key, state) => {
     localStorage[key] = JSON.stringify(state);
 }
@@ -65,7 +71,9 @@ const getStateFromCache = (key) => {
     return JSON.parse(localStorage[key]);
 }
 
-const getCacheKey = (majors, minors) => {
+const getCacheKey = (majors: Array<string>, minors: Array<string>) => {
+    majors = majors.sort();
+    minors = minors.sort();
     const degrees = JSON.stringify(majors) + ";" + JSON.stringify(minors);
     return degrees;
 }
@@ -108,7 +116,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         let newState = this.copyState();
         newState[source] = list1;
         newState[dest] = list2;
-        cacheState(getCacheKey(this.props.majors, this.props.minors), newState);
+        cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), newState);
         this.setState(newState);
     }
 
@@ -217,6 +225,12 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return yearContainers;
     }
 
+    handleDeleteClick = () => {
+        const cacheKey = getCacheKey(this.props.majors, this.props.minors);
+        removeFromCache(cacheKey);
+        this.setState(getInitialState(this.props.majors, this.props.minors));
+    }
+
     render() {
         const classLists = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
         const yearContainers = this.getYearContainers();
@@ -225,27 +239,37 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             cn += " minor-selected"
         }
         return (
-            <div id="schedule-container">
-                <div id="course-lists-title" className="lists-title">Your Classes</div>
-                <div id="course-lists-container" className={cn}>
-                    {classLists.map(listId => 
-                        <CourseList
-                            key={listId}
-                            listId={listId}
-                            courses={this.state[listId]} 
-                            setDraggedItem={this.setDraggedItem}
-                            getDraggedItem={this.getDraggedItem}
-                            setClickedItem={this.setClickedItem}
-                            getClickedItem={this.getClickedItem}
-                            isValid={this.isValidMovement}
-                            moveItemToList={this.moveItemToList}
-                            getOriginalList={this.getOriginalListId}
-                        />
-                    )}
+            <div id="scheduler-container">
+                <div id="courses-main-container" className="main-container">
+                    <div id="course-lists-title" className="lists-title">Your Classes</div>
+                    <div id="course-lists-container" className={cn}>
+                        {classLists.map(listId => 
+                            <CourseList
+                                key={listId}
+                                listId={listId}
+                                courses={this.state[listId]} 
+                                setDraggedItem={this.setDraggedItem}
+                                getDraggedItem={this.getDraggedItem}
+                                setClickedItem={this.setClickedItem}
+                                getClickedItem={this.getClickedItem}
+                                isValid={this.isValidMovement}
+                                moveItemToList={this.moveItemToList}
+                                getOriginalList={this.getOriginalListId}
+                            />
+                        )}
+                    </div>
                 </div>
-                <div id="schedule-lists-title" className="lists-title">Your Schedule</div>
-                <div id="schedule-lists-container" className="lists-container">
-                    {yearContainers}
+                <div id="scheduler-main-container" className="main-container">
+                    <div id="schedule-lists-title" className="lists-title">Your Schedule</div>
+                    <FontAwesomeIcon 
+                        icon={faTrashAlt} 
+                        className="schedule-button" 
+                        id="delete-schedule"
+                        onClick={this.handleDeleteClick}
+                    />
+                    <div id="schedule-lists-container" className="lists-container">
+                        {yearContainers}
+                    </div>
                 </div>
             </div>
         )

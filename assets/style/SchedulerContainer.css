@@ -1,9 +1,13 @@
-#schedule-container {
+#scheduler-container {
     width: 100vw;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
+}
+
+.main-container {
+    position: relative;
 }
 
 .lists-container {
@@ -47,6 +51,17 @@
     text-align: center;
 }
 
+.schedule-button {
+    font-size: 18px;
+}
+
+#delete-schedule {
+    position: absolute;
+    top: 28px;
+    right: 80px;
+    color: white;
+}
+
 @media (max-width: 1400px) {
     .lists-container {
         width: 80vw;
@@ -79,8 +94,16 @@
     .lists-container {
         padding: 4px;
         width: 91vw;
+        margin-bottom: 16px;
     }
     .year-container {
         margin: 12px 8px;
+    }
+    .schedule-button {
+        font-size: 16px;
+    }
+    #delete-schedule {
+        top: 28px;
+        right: 60px;
     }
 }
