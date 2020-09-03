@@ -47,6 +47,11 @@ const listIdToTitle = {
     "sp4List": "Spring"
 }
 
+const courseAbbreviations = {
+    "CS": ["COMPSCI"],
+    "EE": ["EECS", "EL ENG"]
+}
+
 const CourseItem = (props) => <div className = {props.className}>{props.name}</div>
 const MemoCourseItem = React.memo(CourseItem);
 
@@ -207,10 +212,37 @@ class CourseList extends React.Component<ListProperties> {
         e.stopPropagation();
     }
 
+    filterWhiteSpace = (s: string) => {
+        return s.trim().replace(/\s\s+/g, ' ');
+    }
+
+    getPossibleFilters = (s: string) => {
+        s = s.toUpperCase();
+        let filters: Array<string> = [s];
+        for (const abbr in courseAbbreviations) {
+            if (s.indexOf(abbr) === 0) {
+                courseAbbreviations[abbr].forEach(newS =>
+                    filters.push(newS + s.substring(2))
+                )
+            }
+        }
+        let copyFilters = [...filters];
+        copyFilters.forEach((s: string) => {
+            for (let i=1; i<s.length; i++) {
+                if (s[i] >= '0' && s[i] <='9' && s[i-1] >= 'A' && s[i-1] <= 'Z') {
+                    filters.push(s.substring(0, i) + " " + s.substring(i));
+                }
+            }
+        })
+        return filters;
+    }
+
     filteredList = (list: Array<string>) => {
-        if (this.state.filter.length > 0) {
-            const filter = this.state.filter.toUpperCase();
-            return list.filter(course => course.toUpperCase().indexOf(filter) !== -1);
+        const filter = this.filterWhiteSpace(this.state.filter).toUpperCase();
+        if (filter.length > 0) {
+            const filters: Array<string> = this.getPossibleFilters(filter);
+            return list.filter(course => 
+                filters.some(s => course.indexOf(s) !== -1))
         }
         return list;
     }
