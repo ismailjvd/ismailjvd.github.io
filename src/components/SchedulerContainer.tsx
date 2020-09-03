@@ -166,32 +166,6 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         )
     }
 
-    dragItemToList = (dest: string) => {
-        const course = this.state.draggedItem.props.name;
-        const index = this.state.draggedItem.props.index;
-        const source = this.state.draggedItem.props.currentList;
-        if (source !== dest && this.isValidMovement(source, dest, course)) {
-            let list1: Array<string> = this.state[source];
-            let list2: Array<string> = this.state[dest];
-            list1.splice(index, 1);
-            if (SchedulerContainer.isClassList(dest)) {
-                list2.splice(_.sortedIndex(list2, course), 0, course);
-            } else {
-                list2.push(course);
-            }
-            this.updateLists(source, dest, list1, list2);
-        }
-        this.setDraggedItem(undefined);
-    }
-
-    clickItemToList = (dest: string) => {
-        const course = this.state.clickedItem.props.name;
-        const index = this.state.clickedItem.props.index;
-        const source = this.state.clickedItem.props.currentList;
-        this.moveItemToList(source, dest, course, index);
-        this.setClickedItem(undefined);
-    }
-
     moveItemToList = (source: string, dest: string, course: string, index: number) => {
         if (source !== dest && this.isValidMovement(source, dest, course)) {
             let list1: Array<string> = this.state[source];
@@ -222,8 +196,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         setClickedItem={this.setClickedItem}
                         getClickedItem={this.getClickedItem}
                         isValid={this.isValidMovement}
-                        dragItemToList={this.dragItemToList}
-                        clickItemToList={this.clickItemToList}
+                        moveItemToList={this.moveItemToList}
                         getOriginalList={this.getOriginalListId}
                     />
                     <CourseList 
@@ -235,8 +208,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         setClickedItem={this.setClickedItem}
                         getClickedItem={this.getClickedItem}
                         isValid={this.isValidMovement}
-                        dragItemToList={this.dragItemToList}
-                        clickItemToList={this.clickItemToList}
+                        moveItemToList={this.moveItemToList}
                         getOriginalList={this.getOriginalListId}
                     />
                 </div>
@@ -266,8 +238,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                             setClickedItem={this.setClickedItem}
                             getClickedItem={this.getClickedItem}
                             isValid={this.isValidMovement}
-                            dragItemToList={this.dragItemToList}
-                            clickItemToList={this.clickItemToList}
+                            moveItemToList={this.moveItemToList}
                             getOriginalList={this.getOriginalListId}
                         />
                     )}

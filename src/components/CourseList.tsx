@@ -11,8 +11,7 @@ type ListProperties = {
     setClickedItem: (item: DraggableItem | undefined) => void;
     getClickedItem: () => DraggableItem | undefined;
     isValid: (source, dest, course) => boolean;
-    dragItemToList: (listId) => void;
-    clickItemToList: (listId) => void;
+    moveItemToList: (source, dest, course, index) => void;
     getOriginalList: (course) => string;
 }
 
@@ -94,10 +93,10 @@ class DraggableItem extends React.Component<DraggableItemProperites> {
         document.removeEventListener("mousedown", this.handleOutsideClick);
         if (!e.target.classList.contains("can-click")) {
             this.props.setClickedItem(undefined);
-            this.setState({
-                clicked: false
-            });
         }
+        this.setState({
+            clicked: false
+        });
     }
 
     handleDragStart = () => {
@@ -197,7 +196,13 @@ class CourseList extends React.Component<ListProperties> {
     handleDrop = (e) => {
         this.counter = 0;
         if (this.props.getDraggedItem()) {
-            this.props.dragItemToList(this.props.listId);
+            const item = this.props.getDraggedItem();
+            const course = item.props.name;
+            const index = item.props.index;
+            const source = item.props.currentList;
+            const dest = this.props.listId;
+            this.props.moveItemToList(source, dest, course, index);
+            this.props.setDraggedItem(undefined);
         }
         e.stopPropagation();
     }
@@ -218,7 +223,13 @@ class CourseList extends React.Component<ListProperties> {
 
     handleClick = () => {
         if (this.props.getClickedItem()) {
-            this.props.clickItemToList(this.props.listId);
+            const item = this.props.getClickedItem();
+            const course = item.props.name;
+            const index = item.props.index;
+            const source = item.props.currentList;
+            const dest = this.props.listId;
+            this.props.moveItemToList(source, dest, course, index);
+            this.props.setClickedItem(undefined);
         }
     }
 
