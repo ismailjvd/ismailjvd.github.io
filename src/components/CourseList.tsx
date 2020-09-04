@@ -67,29 +67,11 @@ class SearchBar extends React.Component<SearchBarProperties> {
     }
 }
 
-class DraggableItem extends React.Component<DraggableItemProperites> {
-
-    state = {
-        dragging: false,
-        clicked: false,
-    }
-
-    static getDerivedStateFromProps(nextProps, prevState) {
-        if(!nextProps.getDraggedItem() && prevState.dragging) {
-            return {dragging: false};
-        }
-        if(!nextProps.getClickedItem() && prevState.clicked) {
-            return {clicked: false};
-        }
-        return null;
-    }
+class DraggableItem extends React.PureComponent<DraggableItemProperites> {
 
     handleClick = () => {
         if (!this.props.getClickedItem()) {
             this.props.setClickedItem(this);
-            this.setState({
-                clicked: true
-            });
             document.addEventListener("mousedown", this.handleOutsideClick);
         }
     }
@@ -99,17 +81,11 @@ class DraggableItem extends React.Component<DraggableItemProperites> {
         if (!e.target.classList.contains("can-click")) {
             this.props.setClickedItem(undefined);
         }
-        this.setState({
-            clicked: false
-        });
     }
 
     handleDragStart = () => {
         if (!this.props.getDraggedItem()) {
             this.props.setDraggedItem(this);
-            this.setState({
-                dragging: true
-            })
         }
     }
 
@@ -122,11 +98,6 @@ class DraggableItem extends React.Component<DraggableItemProperites> {
     render() {
         let className = this.props.itemClass;
         className += " " + this.props.originalList;
-        if (this.state.dragging) {
-            className += " dragging";
-        } else if (this.state.clicked) {
-            className += " clicked";
-        }
         return (
             <div 
                 className="draggable-item"
@@ -284,14 +255,25 @@ class CourseList extends React.Component<ListProperties> {
         return null;
     }
 
+    getItemClass = (course) => {
+        let className = "course-item";
+        const draggedItem = this.props.getDraggedItem();
+        if (draggedItem && draggedItem.props.name === course) {
+            className += " dragging";
+        }
+        const clickedItem = this.props.getClickedItem();
+        if (clickedItem && clickedItem.props.name === course) {
+            className += " clicked";
+        }
+        return className;
+    }
+
     render() {
         if (this.props.courses.length === 0 && this.props.listId === "minorList") {
             return <div className="empty-div"></div>
         }
         let cn = "course-list";
-        let listItemClass = "course-item";
         if (this.props.getDraggedItem()) {
-            listItemClass += " dragging-list";
             if (this.state.dragging) {
                 cn = this.state.droppable ? cn + " can-drop" : cn + " no-drop";
             }
@@ -302,7 +284,7 @@ class CourseList extends React.Component<ListProperties> {
             <SearchBar setFilter={this.setFilter} value={this.state.filter} /> : null;
         return (
             <div className="list-wrapper">
-                <div className="list-title">{listIdToTitle[this.props.listId]}</div>
+                <div className="list-title no-select">{listIdToTitle[this.props.listId]}</div>
                 <div className="search-with-list">
                     {searchBar}
                     <div 
@@ -319,7 +301,7 @@ class CourseList extends React.Component<ListProperties> {
                                 name={course} 
                                 index={index} 
                                 currentList={this.props.listId}
-                                itemClass={listItemClass}
+                                itemClass={this.getItemClass(course)}
                                 originalList={this.props.getOriginalList(course)}
                                 setDraggedItem={this.props.setDraggedItem}
                                 getDraggedItem={this.props.getDraggedItem}

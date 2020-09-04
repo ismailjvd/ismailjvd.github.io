@@ -4,7 +4,7 @@ import { DraggableItem } from './CourseList';
 import { string } from 'prop-types';
 import degreeData from './DegreeData';
 import { _ } from 'lodash';
-import { faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faTrashAlt, faEllipsisV, faLink, faFileDownload, faFileImport } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 type SchedulerProperties = {
@@ -23,6 +23,7 @@ const getInitialState = (majors: Array<string>, minors: Array<string>) => {
     let state = {
         draggedItem: undefined,
         clickedItem: undefined,
+        isMenuOpen: false,
         majors: majors,
         minors: minors,
         lists: degreeData.getOriginalLists(majors, minors),
@@ -94,6 +95,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return {
             draggedItem: undefined,
             clickedItem: undefined,
+            isMenuOpen: false,
             majors: [...this.state.majors],
             minors: [...this.state.minors],
             lists: {...this.state.lists},
@@ -186,7 +188,6 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             }
             this.updateLists(source, dest, list1, list2);
         }
-        this.setDraggedItem(undefined);
     }
 
     getYearContainers = () => {
@@ -225,6 +226,70 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return yearContainers;
     }
 
+    handleMenuOutsideClick = (e) => {
+        if (this.state.isMenuOpen) {
+            if (!e.target.classList.contains("menu-container") && 
+                    !(e.target.classList.contains("menu-row")) &&
+                    !(e.target.parentNode && (
+                        e.target.parentNode.classList.contains("menu-row") || 
+                        e.target.parentNode.classList.contains("menu-icon") ||
+                        e.target.parentNode.classList.contains("fa-icon") || 
+                        e.target.parentNode.id === "menu-button")) && 
+                    !(e.target.id === "menu-button")) {
+                document.removeEventListener("mousedown", this.handleMenuOutsideClick);
+                this.setState({
+                    isMenuOpen: false,
+                })
+            }
+        }
+    }
+
+    menuToggle = () => {
+        if (!this.state.isMenuOpen) {
+            this.setState({
+                isMenuOpen: true,
+            }, () => { 
+                document.addEventListener("mousedown", this.handleMenuOutsideClick);
+            })
+        } else {
+            document.removeEventListener("mousedown", this.handleMenuOutsideClick);
+            this.setState({
+                isMenuOpen: false,
+            })
+        }
+    }
+
+    createMenu = () => {
+        const menuClass = this.state.isMenuOpen ? "menu-container menu-open" : "menu-container";
+        return (
+            <div className="menu-reference" id="menu-reference">
+                <div className="schedule-button" id="menu-button" onClick={this.menuToggle}>
+                    <FontAwesomeIcon icon={faEllipsisV} className="fa-icon"/>
+                </div>
+                <div className={menuClass} id="menu-container">
+                    <div className="menu-row no-select">
+                        <div className="menu-icon" id="link-icon">
+                            <FontAwesomeIcon icon={faLink} className="fa-icon"/>
+                        </div>
+                        <div className="menu-text">Get Shareable Link</div>
+                    </div>
+                    <div className="menu-row no-select">
+                        <div className="menu-icon" id="export-icon">
+                            <FontAwesomeIcon icon={faFileDownload} className="fa-icon"/>
+                        </div>
+                        <div className="menu-text">Export Schedule</div>
+                    </div>
+                    <div className="menu-row no-select">
+                        <div className="menu-icon" id="import-icon">
+                            <FontAwesomeIcon icon={faFileImport} className="fa-icon"/>
+                        </div>
+                        <div className="menu-text">Import Schedule</div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     handleDeleteClick = () => {
         const cacheKey = getCacheKey(this.props.majors, this.props.minors);
         removeFromCache(cacheKey);
@@ -261,12 +326,10 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                 </div>
                 <div id="scheduler-main-container" className="main-container">
                     <div id="schedule-lists-title" className="lists-title">Your Schedule</div>
-                    <FontAwesomeIcon 
-                        icon={faTrashAlt} 
-                        className="schedule-button" 
-                        id="delete-schedule"
-                        onClick={this.handleDeleteClick}
-                    />
+                    <div id="delete-schedule" className="schedule-button" onClick={this.handleDeleteClick}>
+                        <FontAwesomeIcon icon={faTrashAlt} />
+                    </div>
+                    {this.createMenu()}
                     <div id="schedule-lists-container" className="lists-container">
                         {yearContainers}
                     </div>
