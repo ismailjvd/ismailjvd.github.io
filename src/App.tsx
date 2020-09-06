@@ -13,6 +13,7 @@ import "../assets/style/Header.css";
 import "../assets/style/DegreeSelector.css";
 import "../assets/style/SchedulerContainer.css";
 import "../assets/style/CourseList.css";
+import "../assets/style/Modal.css";
 
 const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     let state = {
