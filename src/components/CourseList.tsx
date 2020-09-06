@@ -11,13 +11,12 @@ type ListProperties = {
     setClickedItem: (item: DraggableItem | undefined) => void;
     getClickedItem: () => DraggableItem | undefined;
     isValid: (source, dest, course) => boolean;
-    moveItemToList: (source, dest, course, index) => void;
+    moveItemToList: (source, dest, course) => void;
     getOriginalList: (course) => string;
 }
 
 type DraggableItemProperites = {
     name: string;
-    index: number;
     currentList: string;
     originalList: string;
     itemClass: string;
@@ -174,10 +173,9 @@ class CourseList extends React.Component<ListProperties> {
         if (this.props.getDraggedItem()) {
             const item = this.props.getDraggedItem();
             const course = item.props.name;
-            const index = item.props.index;
             const source = item.props.currentList;
             const dest = this.props.listId;
-            this.props.moveItemToList(source, dest, course, index);
+            this.props.moveItemToList(source, dest, course);
             this.props.setDraggedItem(undefined);
         }
         e.stopPropagation();
@@ -228,10 +226,9 @@ class CourseList extends React.Component<ListProperties> {
         if (this.props.getClickedItem()) {
             const item = this.props.getClickedItem();
             const course = item.props.name;
-            const index = item.props.index;
             const source = item.props.currentList;
             const dest = this.props.listId;
-            this.props.moveItemToList(source, dest, course, index);
+            this.props.moveItemToList(source, dest, course);
             this.props.setClickedItem(undefined);
         }
     }
@@ -299,7 +296,6 @@ class CourseList extends React.Component<ListProperties> {
                             <MemoDraggableItem 
                                 key={index} 
                                 name={course} 
-                                index={index} 
                                 currentList={this.props.listId}
                                 itemClass={this.getItemClass(course)}
                                 originalList={this.props.getOriginalList(course)}

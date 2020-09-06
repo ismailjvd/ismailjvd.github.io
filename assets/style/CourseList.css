@@ -86,10 +86,12 @@ div::-webkit-scrollbar-thumb {
     padding: 4px;
     font-family: Calibri,sans-serif;
     font-size: 17.5;
+    overflow-wrap: break-word;
 }
 
 .course-item:hover {
     cursor: grab;
+    filter: brightness(0.94);
 }
 
 .course-item:active {

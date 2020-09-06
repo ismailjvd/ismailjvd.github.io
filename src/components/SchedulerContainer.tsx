@@ -1,15 +1,17 @@
 import * as React from 'react';
 import CourseList from './CourseList';
 import { DraggableItem } from './CourseList';
-import { string } from 'prop-types';
 import degreeData from './DegreeData';
 import { _ } from 'lodash';
 import { faTrashAlt, faEllipsisV, faLink, faFileDownload, faFileImport } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Modal from './Modal';
+import { ancestorHasClass } from '../functions/helperFunctions';
 
 type SchedulerProperties = {
     majors: Array<string>,
     minors: Array<string>,
+    setModal: (modal: JSX.Element | undefined) => void
 }
 
 type ListData = {
@@ -176,17 +178,20 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         )
     }
 
-    moveItemToList = (source: string, dest: string, course: string, index: number) => {
+    moveItemToList = (source: string, dest: string, course: string) => {
         if (source !== dest && this.isValidMovement(source, dest, course)) {
             let list1: Array<string> = this.state[source];
             let list2: Array<string> = this.state[dest];
-            list1.splice(index, 1);
-            if (SchedulerContainer.isClassList(dest)) {
-                list2.splice(_.sortedIndex(list2, course), 0, course);
-            } else {
-                list2.push(course);
+            let index = list1.indexOf(course);
+            if (index !== -1) {
+                list1.splice(index, 1);
+                if (SchedulerContainer.isClassList(dest)) {
+                    list2.splice(_.sortedIndex(list2, course), 0, course);
+                } else {
+                    list2.push(course);
+                }
+                this.updateLists(source, dest, list1, list2);
             }
-            this.updateLists(source, dest, list1, list2);
         }
     }
 
@@ -228,14 +233,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     handleMenuOutsideClick = (e) => {
         if (this.state.isMenuOpen) {
-            if (!e.target.classList.contains("menu-container") && 
-                    !(e.target.classList.contains("menu-row")) &&
-                    !(e.target.parentNode && (
-                        e.target.parentNode.classList.contains("menu-row") || 
-                        e.target.parentNode.classList.contains("menu-icon") ||
-                        e.target.parentNode.classList.contains("fa-icon") || 
-                        e.target.parentNode.id === "menu-button")) && 
-                    !(e.target.id === "menu-button")) {
+            if (!ancestorHasClass(e.target, "menu-reference")) {
                 document.removeEventListener("mousedown", this.handleMenuOutsideClick);
                 this.setState({
                     isMenuOpen: false,
@@ -267,19 +265,19 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     <FontAwesomeIcon icon={faEllipsisV} className="fa-icon"/>
                 </div>
                 <div className={menuClass} id="menu-container">
-                    <div className="menu-row no-select">
+                    <div className="menu-row no-select" id="link-row" onClick={this.showModal("copy-link")}>
                         <div className="menu-icon" id="link-icon">
                             <FontAwesomeIcon icon={faLink} className="fa-icon"/>
                         </div>
                         <div className="menu-text">Get Shareable Link</div>
                     </div>
-                    <div className="menu-row no-select">
+                    <div className="menu-row no-select" id="export-row" onClick={this.showModal("export")}>
                         <div className="menu-icon" id="export-icon">
                             <FontAwesomeIcon icon={faFileDownload} className="fa-icon"/>
                         </div>
                         <div className="menu-text">Export Schedule</div>
                     </div>
-                    <div className="menu-row no-select">
+                    <div className="menu-row no-select" id="import-row" onClick={this.showModal("import")}>
                         <div className="menu-icon" id="import-icon">
                             <FontAwesomeIcon icon={faFileImport} className="fa-icon"/>
                         </div>
@@ -294,6 +292,62 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         const cacheKey = getCacheKey(this.props.majors, this.props.minors);
         removeFromCache(cacheKey);
         this.setState(getInitialState(this.props.majors, this.props.minors));
+    }
+
+    showModal = (modalType: string) => {
+        return () => {
+            let modal = null;
+            switch(modalType) {
+                case "delete":
+                    modal = 
+                        <Modal 
+                            message = "This action will delete the current schedule. Proceed?"
+                            posText = "Clear"
+                            negText = "Cancel"
+                            posAction = {this.handleDeleteClick}
+                            setModal = {this.props.setModal}
+                        />
+                    break;
+                case "copy-link":
+                    this.menuToggle();
+                    modal = 
+                        <Modal 
+                            message = "URL: "
+                            posText = "Copy Link"
+                            negText = "Cancel"
+                            posAction = {() => {}}
+                            setModal = {this.props.setModal}
+                        />
+                    break;
+                case "export":
+                        this.menuToggle();
+                        modal = 
+                            <Modal 
+                                message = "Save your current schedule as a .sch, which can later be imported"
+                                posText = "Download"
+                                negText = "Cancel"
+                                posAction = {() => {}}
+                                setModal = {this.props.setModal}
+                            />
+                        break;
+                case "import":
+                        this.menuToggle();
+                        modal = 
+                            <Modal 
+                                message = "Load a schedule from a .sch file"
+                                posText = "Browse"
+                                negText = "Cancel"
+                                posAction = {() => {}}
+                                setModal = {this.props.setModal}
+                            />
+                        break;
+                default: 
+                    break;
+            }
+            if (modal) {
+                this.props.setModal(modal);
+            }
+        }
     }
 
     render() {
@@ -326,7 +380,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                 </div>
                 <div id="scheduler-main-container" className="main-container">
                     <div id="schedule-lists-title" className="lists-title">Your Schedule</div>
-                    <div id="delete-schedule" className="schedule-button" onClick={this.handleDeleteClick}>
+                    <div id="delete-schedule" className="schedule-button" onClick={this.showModal("delete")}>
                         <FontAwesomeIcon icon={faTrashAlt} />
                     </div>
                     {this.createMenu()}
