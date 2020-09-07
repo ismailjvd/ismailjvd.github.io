@@ -105,8 +105,8 @@ const getStateFromCache = (key: string): SchedulerState => {
 }
 
 const getCacheKey = (majors: Array<string>, minors: Array<string>) => {
-    majors = majors.sort();
-    minors = minors.sort();
+    majors = [...majors].sort();
+    minors = [...minors].sort();
     const degrees = JSON.stringify(majors) + ";" + JSON.stringify(minors);
     return degrees;
 }

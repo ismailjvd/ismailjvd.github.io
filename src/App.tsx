@@ -17,18 +17,18 @@ import "../assets/style/Modal.css";
 
 const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     let state = {
-        chosenMajors: [degreeData.getSortedMajors()[0]],
-        chosenMinors: [],
+        majors: [degreeData.getSortedMajors()[0]],
+        minors: [],
         modal: undefined
     }
     if (localStorage["currState"]) {
         state = getStateFromCache("currState")
     }
     if (majors) {
-        state.chosenMajors = majors;
+        state.majors = majors;
     }
     if (minors) {
-        state.chosenMinors = minors;
+        state.minors = minors;
     }
     return state;
 }
@@ -68,13 +68,13 @@ class App extends React.Component {
             <div id="main-container">
                 <Header />
                 <DegreeSelector 
-                    chosenMajors={state.chosenMajors} 
-                    chosenMinors={state.chosenMinors}
+                    majors={[...state.majors]} 
+                    minors={[...state.minors]}
                     updateParent={this.updateChosenDegrees}
                 />
                 <SchedulerContainer 
-                    majors={state.chosenMajors} 
-                    minors={state.chosenMinors}
+                    majors={[...state.majors]} 
+                    minors={[...state.minors]}
                     setModal={this.updateModal}
                 />
                 <Counter />

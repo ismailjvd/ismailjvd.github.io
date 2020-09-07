@@ -8,10 +8,7 @@ class DegreeData {
     private _sortedMinors: Array<string> = Object.keys(data.minors).sort();
     private _sortedBreadths: Array<string> = data.breadths.breadthCourses;
 
-    private constructor() {
-    }
-
-    static getInstance() {
+    static getInstance(): DegreeData {
         if (!DegreeData.instance) {
             DegreeData.instance = new DegreeData();
         }
@@ -26,28 +23,28 @@ class DegreeData {
         return this._sortedMinors;
     }
 
-    getSortedLowerDivs(majors): Array<string> {
-        const lowerDivLists = majors.map(major => data.majors[major].classes.lowerDivs);
+    getSortedLowerDivs(majors: Array<string>): Array<string> {
+        const lowerDivLists: Array<string> = majors.map(major => data.majors[major].classes.lowerDivs);
         return union.apply(_, lowerDivLists).sort();
     }
 
-    getSortedUpperDivs(majors): Array<string> {
-        const lowerDivs = this.getSortedLowerDivs(majors);
-        const upperDivLists = majors.map(major => data.majors[major].classes.upperDivs);
+    getSortedUpperDivs(majors: Array<string>): Array<string> {
+        const lowerDivs: Array<string> = this.getSortedLowerDivs(majors);
+        const upperDivLists: Array<string> = majors.map(major => data.majors[major].classes.upperDivs);
         return union.apply(_, upperDivLists).sort().filter(course => lowerDivs.indexOf(course) === -1);
     }
 
-    getSortedBreadths(majors, minors): Array<string> {
-        const lowerDivs = this.getSortedLowerDivs(majors);
-        const upperDivs = this.getSortedUpperDivs(majors);
-        const minorCourses = this.getSortedMinorCourses(majors, minors);
+    getSortedBreadths(majors: Array<string>, minors: Array<string>): Array<string> {
+        const lowerDivs: Array<string> = this.getSortedLowerDivs(majors);
+        const upperDivs: Array<string> = this.getSortedUpperDivs(majors);
+        const minorCourses: Array<string> = this.getSortedMinorCourses(majors, minors);
         return this._sortedBreadths.filter(course => {
             return (lowerDivs.indexOf(course) === -1 && upperDivs.indexOf(course) === -1 &&
                 minorCourses.indexOf(course) === -1);
         })
     }
 
-    getSortedMinorCourses(majors, minors): Array<string> {
+    getSortedMinorCourses(majors: Array<string>, minors: Array<string>): Array<string> {
         const lowerDivs = this.getSortedLowerDivs(majors);
         const upperDivs = this.getSortedUpperDivs(majors);
         const minorCoursesLists = minors.map(minor => data.minors[minor].minorCourses);    
@@ -56,7 +53,7 @@ class DegreeData {
         )
     }
 
-    getOriginalLists(majors, minors) {
+    getOriginalLists(majors: Array<string>, minors: Array<string>) {
         const lowerDivs = this.getSortedLowerDivs(majors);
         const upperDivs = this.getSortedUpperDivs(majors);
         const minorCourses = this.getSortedMinorCourses(majors, minors);
