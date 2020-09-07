@@ -1,5 +1,6 @@
 import data from '../../assets/data/degrees.json';
 import { _, union } from 'lodash';
+import { ListData } from './SchedulerContainer';
 
 class DegreeData {
     private static instance: DegreeData;
@@ -67,6 +68,24 @@ class DegreeData {
             breadths: breadths
         }
         return res;
+    }
+
+    createCourseListMap = (majors: Array<string>, minors: Array<string>): Object => {
+        let lists: ListData = this.getOriginalLists(majors, minors);
+        let d = {};
+        lists.lowerDivs.forEach((course) => {
+            d[course] = "lowerDivList";
+        })
+        lists.upperDivs.forEach((course) => {
+            d[course] = "upperDivList";
+        })
+        lists.breadths.forEach((course) => {
+            d[course] = "breadthList";
+        })
+        lists.minorCourses.forEach((course) => {
+            d[course] = "minorList";
+        })
+        return d;
     }
 }
 

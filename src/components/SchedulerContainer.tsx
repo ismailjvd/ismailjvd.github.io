@@ -8,6 +8,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from './Modal';
 import { ancestorHasClass } from '../functions/helperFunctions';
 
+/* Type Declarations */
+
 type SchedulerProperties = {
     majors: Array<string>,
     minors: Array<string>,
@@ -21,14 +23,41 @@ type ListData = {
     breadths: Array<string>
 }
 
-const getInitialState = (majors: Array<string>, minors: Array<string>) => {
-    let state = {
+type SchedulerState = {
+    draggedItem: undefined | DraggableItem,
+    clickedItem: undefined | DraggableItem,
+    isMenuOpen: boolean,
+    majors: Array<string>,
+    minors: Array<string>,
+    courseListMap: Object,
+    lowerDivList: Array<string>,
+    upperDivList: Array<string>,
+    breadthList: Array<string>,
+    minorList: Array<string>,
+    fa1List: Array<string>,
+    sp1List: Array<string>,
+    fa2List: Array<string>,
+    sp2List: Array<string>,
+    fa3List: Array<string>,
+    sp3List: Array<string>,
+    fa4List: Array<string>,
+    sp4List: Array<string>
+}
+
+type ListId = "lowerDivList" | "upperDivList" | "breadthList" | "minorList" | 
+                "fa1List" | "sp1List" | "fa2List" | "sp2List" | "fa3List" | "sp3List" | 
+                "fa4List" | "sp4List" | "custom";
+
+/* State and Cache functions */
+
+const getInitialState = (majors: Array<string>, minors: Array<string>): SchedulerState => {
+    let state: SchedulerState = {
         draggedItem: undefined,
         clickedItem: undefined,
         isMenuOpen: false,
         majors: majors,
         minors: minors,
-        lists: degreeData.getOriginalLists(majors, minors),
+        courseListMap: degreeData.createCourseListMap(majors, minors), 
         lowerDivList: [],
         upperDivList: [],
         breadthList: [],
@@ -42,7 +71,7 @@ const getInitialState = (majors: Array<string>, minors: Array<string>) => {
         fa4List: [],
         sp4List: []
     }
-    const cacheKey = getCacheKey(majors, minors);
+    const cacheKey: string = getCacheKey(majors, minors);
     if (localStorage[cacheKey]) {
         state = getStateFromCache(cacheKey);
     } else {
@@ -66,12 +95,13 @@ const removeFromCache = (key: string) => {
     delete localStorage[key];
 }
 
-const cacheState = (key, state) => {
+const cacheState = (key: string, state: SchedulerState) => {
     localStorage[key] = JSON.stringify(state);
 }
 
-const getStateFromCache = (key) => {
-    return JSON.parse(localStorage[key]);
+const getStateFromCache = (key: string): SchedulerState => {
+    const state: SchedulerState = JSON.parse(localStorage[key]);
+    return state;
 }
 
 const getCacheKey = (majors: Array<string>, minors: Array<string>) => {
@@ -83,6 +113,8 @@ const getCacheKey = (majors: Array<string>, minors: Array<string>) => {
 
 class SchedulerContainer extends React.Component<SchedulerProperties> {
 
+    /* State functions */
+
     static getDerivedStateFromProps(nextProps, prevState) {
         if(!(_.isEqual(nextProps.majors, prevState.majors) && 
             (_.isEqual(nextProps.minors, prevState.minors)))) {
@@ -93,14 +125,14 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     state = getInitialState(this.props.majors, this.props.minors);
 
-    copyState() {
+    copyState = (): SchedulerState => {
         return {
             draggedItem: undefined,
             clickedItem: undefined,
             isMenuOpen: false,
             majors: [...this.state.majors],
             minors: [...this.state.minors],
-            lists: {...this.state.lists},
+            courseListMap: {...this.state.courseListMap},
             lowerDivList: [...this.state.lowerDivList],
             upperDivList: [...this.state.upperDivList],
             breadthList: [...this.state.breadthList],
@@ -116,13 +148,15 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         }
     }
 
-    updateLists = (source:string, dest:string, list1: Array<string>, list2: Array<string>) => {
-        let newState = this.copyState();
+    updateLists = (source: ListId, dest: ListId, list1: Array<string>, list2: Array<string>) => {
+        let newState: SchedulerState = this.copyState();
         newState[source] = list1;
         newState[dest] = list2;
         cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), newState);
         this.setState(newState);
     }
+
+    /* Drag and Click hooks */
 
     setDraggedItem = (item: DraggableItem | undefined) => {
         this.setState({
@@ -144,41 +178,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return this.state.clickedItem;
     }
 
-    getOriginalListId = (course: string) => {
-        let listOrigin: string;
-        switch(course) {
-            case this.state.lists.lowerDivs[this.state.lists.lowerDivs.indexOf(course)]:
-                listOrigin = "lowerDivList";
-                break;
-            case this.state.lists.upperDivs[this.state.lists.upperDivs.indexOf(course)]:
-                listOrigin = "upperDivList";
-                break;
-            case this.state.lists.minorCourses[this.state.lists.minorCourses.indexOf(course)]:
-                listOrigin = "minorList";
-                break;
-            case this.state.lists.breadths[this.state.lists.breadths.indexOf(course)]:
-                listOrigin = "breadthList";
-                break;
-            default:
-                listOrigin = "custom";
-                break;
-        }
-        return listOrigin;
-    }
-
-    static isClassList(listId: string): boolean {
-        const classLists: Array<string> = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
-        return classLists.indexOf(listId) !== -1;
-    }
-
-    isValidMovement = (source: string, dest: string, course: string) => {
-        return (
-            (!SchedulerContainer.isClassList(dest) || 
-                dest === this.getOriginalListId(course))
-        )
-    }
-
-    moveItemToList = (source: string, dest: string, course: string) => {
+    moveItemToList = (source: ListId, dest: ListId, course: string) => {
         if (source !== dest && this.isValidMovement(source, dest, course)) {
             let list1: Array<string> = this.state[source];
             let list2: Array<string> = this.state[dest];
@@ -195,9 +195,51 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         }
     }
 
-    getYearContainers = () => {
-        const scheduleLists = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
-        let yearContainers = [];
+    getOriginalListId = (course: string): ListId => {
+        if(course in this.state.courseListMap) {
+            return this.state.courseListMap[course];
+        } else {
+            return "custom";
+        }
+    }
+
+    isValidMovement = (source: ListId, dest: ListId, course: string): boolean => {
+        return (
+            (!SchedulerContainer.isClassList(dest) || 
+                dest === this.getOriginalListId(course))
+        )
+    }
+
+    static isClassList(listId: ListId): boolean {
+        const classLists: Array<string> = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
+        return classLists.indexOf(listId) !== -1;
+    }
+
+    /* JSX Helpers */
+
+    getClassLists = (): Array<JSX.Element> => {
+        const classLists: Array<ListId> = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
+        return (
+            classLists.map(listId => 
+                <CourseList
+                    key={listId}
+                    listId={listId}
+                    courses={this.state[listId]} 
+                    setDraggedItem={this.setDraggedItem}
+                    getDraggedItem={this.getDraggedItem}
+                    setClickedItem={this.setClickedItem}
+                    getClickedItem={this.getClickedItem}
+                    isValid={this.isValidMovement}
+                    moveItemToList={this.moveItemToList}
+                    getOriginalList={this.getOriginalListId}
+                />
+            )
+        )
+    }
+
+    getYearContainers = (): Array<JSX.Element> => {
+        const scheduleLists: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        let yearContainers: Array<JSX.Element> = [];
         for (let i=0;i<scheduleLists.length;i+=2) {
             yearContainers.push(
                 <div className="year-container" key={"container-"+scheduleLists[i]+"-"+scheduleLists[i+1]}>
@@ -231,33 +273,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return yearContainers;
     }
 
-    handleMenuOutsideClick = (e) => {
-        if (this.state.isMenuOpen) {
-            if (!ancestorHasClass(e.target, "menu-reference")) {
-                document.removeEventListener("mousedown", this.handleMenuOutsideClick);
-                this.setState({
-                    isMenuOpen: false,
-                })
-            }
-        }
-    }
-
-    menuToggle = () => {
-        if (!this.state.isMenuOpen) {
-            this.setState({
-                isMenuOpen: true,
-            }, () => { 
-                document.addEventListener("mousedown", this.handleMenuOutsideClick);
-            })
-        } else {
-            document.removeEventListener("mousedown", this.handleMenuOutsideClick);
-            this.setState({
-                isMenuOpen: false,
-            })
-        }
-    }
-
-    createMenu = () => {
+    createMenu = (): JSX.Element => {
         const menuClass = this.state.isMenuOpen ? "menu-container menu-open" : "menu-container";
         return (
             <div className="menu-reference" id="menu-reference">
@@ -286,6 +302,38 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                 </div>
             </div>
         )
+    }
+
+    getCourseContainerClass = (): string => {
+        return this.props.minors.length > 0 ? "lists-container minor-selected" : "lists-container";
+    }
+
+    /* Click Handlers */
+
+    handleMenuOutsideClick = (e) => {
+        if (this.state.isMenuOpen) {
+            if (!ancestorHasClass(e.target, "menu-reference")) {
+                document.removeEventListener("mousedown", this.handleMenuOutsideClick);
+                this.setState({
+                    isMenuOpen: false,
+                })
+            }
+        }
+    }
+
+    menuToggle = () => {
+        if (!this.state.isMenuOpen) {
+            this.setState({
+                isMenuOpen: true,
+            }, () => { 
+                document.addEventListener("mousedown", this.handleMenuOutsideClick);
+            })
+        } else {
+            document.removeEventListener("mousedown", this.handleMenuOutsideClick);
+            this.setState({
+                isMenuOpen: false,
+            })
+        }
     }
 
     handleDeleteClick = () => {
@@ -351,31 +399,12 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     }
 
     render() {
-        const classLists = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
-        const yearContainers = this.getYearContainers();
-        let cn = "lists-container";
-        if (this.props.minors.length > 0) {
-            cn += " minor-selected"
-        }
         return (
             <div id="scheduler-container">
                 <div id="courses-main-container" className="main-container">
                     <div id="course-lists-title" className="lists-title">Your Classes</div>
-                    <div id="course-lists-container" className={cn}>
-                        {classLists.map(listId => 
-                            <CourseList
-                                key={listId}
-                                listId={listId}
-                                courses={this.state[listId]} 
-                                setDraggedItem={this.setDraggedItem}
-                                getDraggedItem={this.getDraggedItem}
-                                setClickedItem={this.setClickedItem}
-                                getClickedItem={this.getClickedItem}
-                                isValid={this.isValidMovement}
-                                moveItemToList={this.moveItemToList}
-                                getOriginalList={this.getOriginalListId}
-                            />
-                        )}
+                    <div id="course-lists-container" className={this.getCourseContainerClass()}>
+                        {this.getClassLists()}
                     </div>
                 </div>
                 <div id="scheduler-main-container" className="main-container">
@@ -385,7 +414,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     </div>
                     {this.createMenu()}
                     <div id="schedule-lists-container" className="lists-container">
-                        {yearContainers}
+                        {this.getYearContainers()}
                     </div>
                 </div>
             </div>
@@ -394,3 +423,5 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 }
 
 export default SchedulerContainer;
+export { ListId, ListData };
+
