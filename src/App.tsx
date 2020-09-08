@@ -15,6 +15,7 @@ import "../assets/style/SchedulerContainer.css";
 import "../assets/style/CourseList.css";
 import "../assets/style/Modal.css";
 import "../assets/style/DraggableItem.css";
+import "../assets/style/DeleteContainer.css";
 
 const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     let state = {

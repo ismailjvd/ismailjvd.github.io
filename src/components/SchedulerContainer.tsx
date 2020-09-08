@@ -7,6 +7,7 @@ import { faTrashAlt, faEllipsisV, faLink, faFileDownload, faFileImport } from '@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from './Modal';
 import { ancestorHasClass } from '../functions/helperFunctions';
+import DeleteContainer from './DeleteContainer';
 
 /* Type Declarations */
 
@@ -417,6 +418,13 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         {this.getYearContainers()}
                     </div>
                 </div>
+                <DeleteContainer 
+                    getDraggedItem={this.getDraggedItem} 
+                    setDraggedItem={this.setDraggedItem}
+                    getClickedItem={this.getClickedItem}
+                    setClickedItem={this.setClickedItem}
+                    moveItemToList={this.moveItemToList}
+                />
             </div>
         )
     }

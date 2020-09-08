@@ -134,16 +134,16 @@ class CourseList extends React.Component<ListProperties> {
 
     /* Click Handlers */
 
-        handleClick = () => {
-            if (this.props.getClickedItem()) {
-                const item: DraggableItem = this.props.getClickedItem();
-                const course: string = item.props.name;
-                const source: ListId = item.props.currentList;
-                const dest: ListId = this.props.listId;
-                this.props.moveItemToList(source, dest, course);
-                this.props.setClickedItem(undefined);
-            }
+    handleClick = () => {
+        if (this.props.getClickedItem()) {
+            const item: DraggableItem = this.props.getClickedItem();
+            const course: string = item.props.name;
+            const source: ListId = item.props.currentList;
+            const dest: ListId = this.props.listId;
+            this.props.moveItemToList(source, dest, course);
+            this.props.setClickedItem(undefined);
         }
+    }
 
     /* Search Bar Functions */
 

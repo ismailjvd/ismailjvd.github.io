@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ListId } from './SchedulerContainer';
+import { ancestorHasClass } from '../functions/helperFunctions';
 
 type DraggableItemProperites = {
     name: string;
@@ -29,7 +30,7 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
 
     handleOutsideClick = (e) => {
         document.removeEventListener("mousedown", this.handleOutsideClick);
-        if (!e.target.classList.contains("can-click")) {
+        if (!e.target.classList.contains("can-click") && ancestorHasClass(e.target, "deleteContainer")) {
             this.props.setClickedItem(undefined);
         }
     }
