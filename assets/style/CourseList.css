@@ -44,6 +44,49 @@
     padding: 5px 7px;
 }
 
+.add-bar-container {
+    position: relative;
+}
+
+.add-class-bar {
+    font-family: FontAwesome, Calibri, sans-serif;
+    font-size: 16px;
+    padding: 6px 8px;
+    margin: 6px 4px 2px 4px;
+    width: 94%;
+    border-radius: 6px;
+    border-width: 0px;
+}
+
+.add-class-bar:focus {
+    outline: none !important;
+    border: solid 1px #cccccc;
+    padding: 5px 7px;
+}
+
+.add-class-bar:focus + .add-class-button {
+    color: rgb(162, 224, 162);
+}
+
+.add-class-button {
+    position: absolute;
+    right: 12px;
+    top: 6px;
+    font-size: 18px;
+    padding: 4px 4px;
+    color: rgb(182, 182, 182);
+}
+
+.add-class-button:hover {
+    color: rgb(162, 224, 162);
+    filter: brightness(0.96);
+    cursor: pointer;
+}
+
+.add-class-button:active {
+    transform: scale(0.97);
+}
+
 .course-list {
     background-color: rgb(233, 233, 233);
     overflow-x: hidden;

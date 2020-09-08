@@ -45,6 +45,11 @@
     background-image: linear-gradient(to bottom, rgb(250, 198, 255), rgb(252, 226, 255));
 }
 
+.course-item.custom {
+    background-color: #ffdfa6;
+    background-image: linear-gradient(to bottom, #ffdfa6, #ffedcd);
+}
+
 /* Event Modifiers */
 
 .dragging {

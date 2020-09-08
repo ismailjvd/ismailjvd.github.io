@@ -90,6 +90,14 @@ export default class DeleteContainer extends React.Component<DeleteContainerProp
         return cn;
     }
 
+    getDeleteText = (item: DraggableItem) => {
+        if (item.props.originalList === "custom") {
+            return "Delete Class";
+        } else {
+            return "Remove From List";
+        }
+    }
+
     getDeleteContainer = () => {
         let item: DraggableItem = this.props.getDraggedItem();
         if (item) {
@@ -103,7 +111,7 @@ export default class DeleteContainer extends React.Component<DeleteContainerProp
                         onDrop={this.handleDrop}
                     >
                         <FontAwesomeIcon icon={faTrashAlt} className="delete-course"/>
-                        <div className="delete-text">Remove From List</div>
+                        <div className="delete-text">{this.getDeleteText(item)}</div>
                     </div>
                 )
             }
@@ -117,7 +125,7 @@ export default class DeleteContainer extends React.Component<DeleteContainerProp
                         onClick={this.handleClick} 
                     >
                         <FontAwesomeIcon icon={faTrashAlt} className="delete-course"/>
-                        <div className="delete-text">Remove From List</div>
+                        <div className="delete-text">{this.getDeleteText(item)}</div>
                     </div>
                 )
             }

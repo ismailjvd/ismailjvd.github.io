@@ -117,8 +117,8 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     /* State functions */
 
     static getDerivedStateFromProps(nextProps, prevState) {
-        if(!(_.isEqual(nextProps.majors, prevState.majors) && 
-            (_.isEqual(nextProps.minors, prevState.minors)))) {
+        if(!(_.isEqual([...nextProps.majors].sort(), [...prevState.majors].sort()) && 
+            (_.isEqual([...nextProps.minors].sort(), [...prevState.minors].sort())))) {
             return getInitialState(nextProps.majors, nextProps.minors);
         }
         return null;
@@ -157,6 +157,13 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         this.setState(newState);
     }
 
+    updateList(listId: ListId, list: Array<string>) {
+        let newState: SchedulerState = this.copyState();
+        newState[listId] = list;
+        cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), newState);
+        this.setState(newState);
+    }
+
     /* Drag and Click hooks */
 
     setDraggedItem = (item: DraggableItem | undefined) => {
@@ -180,6 +187,14 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     }
 
     moveItemToList = (source: ListId, dest: ListId, course: string) => {
+        if (dest === "custom") {
+            let list: Array<string> = this.state[source];
+            let index = list.indexOf(course);
+            if (index !== -1) {
+                list.splice(index, 1);
+                this.updateList(source, list);
+            }
+        }
         if (source !== dest && this.isValidMovement(source, dest, course)) {
             let list1: Array<string> = this.state[source];
             let list2: Array<string> = this.state[dest];
@@ -212,8 +227,24 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     }
 
     static isClassList(listId: ListId): boolean {
-        const classLists: Array<string> = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
+        const classLists: Array<ListId> = ["lowerDivList", "upperDivList", "breadthList", "minorList"];
         return classLists.indexOf(listId) !== -1;
+    }
+
+    addClass = (listId: ListId, course: string) => {
+        const scheduleLists: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        let scheduleCourses: Array<string> = [];
+        scheduleLists.forEach(listId => {
+            let list = this.state[listId];
+            scheduleCourses = [...scheduleCourses].concat([...list]);
+        });
+        if (!(course in this.state.courseListMap) && scheduleCourses.indexOf(course) === -1) {
+            let list: Array<string> = this.state[listId];
+            list.push(course);
+            this.updateList(listId, list);
+        } else {
+            console.log("course already exists");
+        }
     }
 
     /* JSX Helpers */
@@ -233,6 +264,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     isValid={this.isValidMovement}
                     moveItemToList={this.moveItemToList}
                     getOriginalList={this.getOriginalListId}
+                    addClass={this.addClass}
                 />
             )
         )
@@ -255,6 +287,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         isValid={this.isValidMovement}
                         moveItemToList={this.moveItemToList}
                         getOriginalList={this.getOriginalListId}
+                        addClass={this.addClass}
                     />
                     <CourseList 
                         key={scheduleLists[i+1]}
@@ -267,6 +300,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         isValid={this.isValidMovement}
                         moveItemToList={this.moveItemToList}
                         getOriginalList={this.getOriginalListId}
+                        addClass={this.addClass}
                     />
                 </div>
             )
@@ -403,13 +437,13 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return (
             <div id="scheduler-container">
                 <div id="courses-main-container" className="main-container">
-                    <div id="course-lists-title" className="lists-title">Your Classes</div>
+                    <div id="course-lists-title" className="lists-title no-select">Your Classes</div>
                     <div id="course-lists-container" className={this.getCourseContainerClass()}>
                         {this.getClassLists()}
                     </div>
                 </div>
                 <div id="scheduler-main-container" className="main-container">
-                    <div id="schedule-lists-title" className="lists-title">Your Schedule</div>
+                    <div id="schedule-lists-title" className="lists-title no-select">Your Schedule</div>
                     <div id="delete-schedule" className="schedule-button" onClick={this.showModal("delete")}>
                         <FontAwesomeIcon icon={faTrashAlt} />
                     </div>

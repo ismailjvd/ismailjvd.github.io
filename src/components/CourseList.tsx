@@ -2,6 +2,8 @@ import * as React from 'react';
 import SchedulerContainer from './SchedulerContainer';
 import DraggableItem, { draggablesAreEqual } from './DraggableItem';
 import { ListId } from './SchedulerContainer';
+import { faPlusSquare } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 /* Type Declarations */
 
@@ -15,6 +17,7 @@ type ListProperties = {
     isValid: (source: ListId, dest: ListId, course: string) => boolean;
     moveItemToList: (source: ListId, dest: ListId, course: string) => void;
     getOriginalList: (course: string) => ListId;
+    addClass: (listId: ListId, course:string) => void;
 }
 
 type ListState = {
@@ -24,8 +27,13 @@ type ListState = {
 }
 
 type SearchBarProperties = {
-    setFilter: (s:string) => void;
-    value: string;
+    setFilter: (s:string) => void,
+    value: string
+}
+
+type AddClassBarProperties = {
+    listId: ListId,
+    addClass: (s: string) => void
 }
 
 const listIdToTitle = {
@@ -54,12 +62,44 @@ class SearchBar extends React.Component<SearchBarProperties> {
     render() {
         return <input 
             type="text" 
-            className="list-search-bar" 
+            className="list-search-bar no-select" 
             value={this.props.value} 
             placeholder="&#xf002;  Search for a class..."
             onChange={(e) => this.props.setFilter(e.target.value)}
+            maxLength={20}
         />
     }
+}
+
+function AddClassBar(props: AddClassBarProperties) {
+    return  (
+        <div className="add-bar-container">
+            <input 
+                type="text" 
+                className="add-class-bar no-select" 
+                placeholder="Add new class..."
+                id={props.listId + "-" + "add-bar"}
+                maxLength={20}
+                onKeyDown={(e) => {
+                    if (e.keyCode === 13) {
+                        const input: HTMLInputElement = document.getElementById(props.listId + "-" + "add-bar") as HTMLInputElement;
+                        props.addClass(input.value);
+                        input.value = "";
+                    }
+                }}
+            />
+            <div 
+                className="add-class-button"
+                onClick={(e) => {
+                    const input: HTMLInputElement = document.getElementById(props.listId + "-" + "add-bar") as HTMLInputElement;
+                    props.addClass(input.value);
+                    input.value = "";
+                }}
+            >
+                <FontAwesomeIcon icon={faPlusSquare}/>
+            </div>
+        </div>
+    )
 }
 
 const MemoDraggableItem = React.memo(DraggableItem, draggablesAreEqual);
@@ -189,6 +229,23 @@ class CourseList extends React.Component<ListProperties> {
         })
     }
 
+    addClass = (s: string) => {
+        s = s.toUpperCase().trim();
+        if (s.length > 0 && this.isValidClass(s)) {
+            this.props.addClass(this.props.listId, s);
+        } else {
+            console.log("Input contains invalid characters");
+        }
+    }
+
+    isValidClass = (s: string): boolean => {
+        var letterNumber = /^[0-9a-zA-Z\s]+$/
+        if (s.match(letterNumber)) {
+            return true;
+        }
+        return false;
+    }
+
     /* JSX Helpers */
 
     getClickOverlay = (): JSX.Element => {
@@ -233,9 +290,10 @@ class CourseList extends React.Component<ListProperties> {
         return className;
     }
 
-    getSearchBar = (): JSX.Element => {
+    getListInputBar = (): JSX.Element => {
         return SchedulerContainer.isClassList(this.props.listId) ?
-                <SearchBar setFilter={this.setFilter} value={this.state.filter} /> : null;
+                <SearchBar setFilter={this.setFilter} value={this.state.filter} /> : 
+                AddClassBar({ listId: this.props.listId, addClass: this.addClass });
     }
 
     render() {
@@ -246,7 +304,7 @@ class CourseList extends React.Component<ListProperties> {
             <div className="list-wrapper">
                 <div className="list-title no-select">{listIdToTitle[this.props.listId]}</div>
                 <div className="search-with-list">
-                    {this.getSearchBar()}
+                    {this.getListInputBar()}
                     <div 
                         id={this.props.listId} 
                         className={this.getListClass()}
