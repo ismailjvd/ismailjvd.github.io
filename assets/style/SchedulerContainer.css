@@ -158,6 +158,10 @@
     padding: 4px 9px 4px 5px;
 }
 
+#file {
+    visibility: hidden;
+}
+
 @media (max-width: 1400px) {
     .lists-container {
         width: 80vw;

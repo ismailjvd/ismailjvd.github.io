@@ -14,7 +14,8 @@ import DeleteContainer from './DeleteContainer';
 type SchedulerProperties = {
     majors: Array<string>,
     minors: Array<string>,
-    setModal: (modal: JSX.Element | undefined) => void
+    setModal: (modal: JSX.Element | undefined) => void,
+    updateDegrees: (majors: Array<string>, minors: Array<string>) => void;
 }
 
 type ListData = {
@@ -147,6 +148,59 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             fa4List: [...this.state.fa4List],
             sp4List: [...this.state.sp4List]
         }
+    }
+
+    isSchedulerState(state: any): state is SchedulerState {
+        /* TODO: develop more accurate scheduler state checking system */
+        let s = state as SchedulerState;
+        if (s.majors && s.minors) {
+            return true;
+        }
+        return false;
+    }
+
+    downloadStateAsJSON = () => {
+        const jsonData = JSON.stringify(this.copyState());
+        const data = "text/json;charset=utf-8," + encodeURIComponent(jsonData);
+        let a = document.createElement('a');
+        a.href = "data:" + data;
+        a.download = "schedule.sch";
+        let container = document.getElementById("main-container");
+        container.appendChild(a);
+        a.click();
+        container.removeChild(a);
+    }
+
+    uploadJSONFile = () => {
+        let fileElement = document.getElementById("file");
+        fileElement.addEventListener("change", this.readScheduleFile);
+        fileElement.click();
+    }
+
+    readScheduleFile = (evt) => {
+        const files = evt.target.files;
+        const file = files[0];           
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                let newState = JSON.parse(event.target.result as string);
+                newState.draggedItem = undefined;
+                newState.clickedItem = undefined;
+                if (this.isSchedulerState(newState)) {
+                    cacheState(getCacheKey(newState.majors, newState.minors), newState);
+                    this.setState(newState);
+                    this.props.updateDegrees(newState.majors, newState.minors);
+                } else {
+                    console.log("invalid file format");
+                }
+            } catch (SyntaxError) {
+                console.log("invalid file format");
+            }
+        }
+        reader.readAsText(file);
+        let fileElement: HTMLInputElement = document.getElementById("file") as HTMLInputElement;
+        fileElement.removeEventListener("change", this.readScheduleFile);
+        fileElement.value = "";
     }
 
     updateLists = (source: ListId, dest: ListId, list1: Array<string>, list2: Array<string>) => {
@@ -409,7 +463,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                                 message = "Save your current schedule as a .sch, which can later be imported"
                                 posText = "Download"
                                 negText = "Cancel"
-                                posAction = {() => {}}
+                                posAction = {this.downloadStateAsJSON}
                                 setModal = {this.props.setModal}
                             />
                         break;
@@ -420,7 +474,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                                 message = "Load a schedule from a .sch file"
                                 posText = "Browse"
                                 negText = "Cancel"
-                                posAction = {() => {}}
+                                posAction = {this.uploadJSONFile}
                                 setModal = {this.props.setModal}
                             />
                         break;
@@ -459,6 +513,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     setClickedItem={this.setClickedItem}
                     moveItemToList={this.moveItemToList}
                 />
+                <input type="file" id="file" name="file" />
             </div>
         )
     }

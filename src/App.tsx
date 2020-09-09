@@ -48,7 +48,7 @@ class App extends React.Component {
     
     state = getInitialState();
 
-    updateChosenDegrees = (majors, minors) => {
+    updateChosenDegrees = (majors: Array<string>, minors: Array<string>) => {
         const newState = getInitialState(majors, minors);
         cacheState("currState", newState);
         this.setState(newState);
@@ -78,6 +78,7 @@ class App extends React.Component {
                     majors={[...state.majors]} 
                     minors={[...state.minors]}
                     setModal={this.updateModal}
+                    updateDegrees={this.updateChosenDegrees}
                 />
                 <Counter />
                 {modal}
