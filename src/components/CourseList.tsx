@@ -4,6 +4,7 @@ import DraggableItem, { draggablesAreEqual } from './DraggableItem';
 import { ListId } from './SchedulerContainer';
 import { faPlusSquare } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { toast } from 'react-toastify';
 
 /* Type Declarations */
 
@@ -33,7 +34,7 @@ type SearchBarProperties = {
 
 type AddClassBarProperties = {
     listId: ListId,
-    addClass: (s: string) => void
+    addClass: (s: string, input: HTMLInputElement) => void
 }
 
 const listIdToTitle = {
@@ -83,8 +84,7 @@ function AddClassBar(props: AddClassBarProperties) {
                 onKeyDown={(e) => {
                     if (e.keyCode === 13) {
                         const input: HTMLInputElement = document.getElementById(props.listId + "-" + "add-bar") as HTMLInputElement;
-                        props.addClass(input.value);
-                        input.value = "";
+                        props.addClass(input.value, input);
                     }
                 }}
             />
@@ -92,8 +92,7 @@ function AddClassBar(props: AddClassBarProperties) {
                 className="add-class-button"
                 onClick={(e) => {
                     const input: HTMLInputElement = document.getElementById(props.listId + "-" + "add-bar") as HTMLInputElement;
-                    props.addClass(input.value);
-                    input.value = "";
+                    props.addClass(input.value, input);
                 }}
             >
                 <FontAwesomeIcon icon={faPlusSquare}/>
@@ -229,12 +228,21 @@ class CourseList extends React.Component<ListProperties> {
         })
     }
 
-    addClass = (s: string) => {
+    addClass = (s: string, input: HTMLInputElement) => {
         s = s.toUpperCase().trim();
         if (s.length > 0 && this.isValidClass(s)) {
             this.props.addClass(this.props.listId, s);
+            input.value = "";
         } else {
-            console.log("Input contains invalid characters");
+            toast.error('Input is empty or contains invalid characters', {
+                position: "bottom-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }
 

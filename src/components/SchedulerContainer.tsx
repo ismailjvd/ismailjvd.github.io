@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from './Modal';
 import { ancestorHasClass } from '../functions/helperFunctions';
 import DeleteContainer from './DeleteContainer';
+import { toast } from 'react-toastify';
 
 /* Type Declarations */
 
@@ -191,10 +192,26 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     this.setState(newState);
                     this.props.updateDegrees(newState.majors, newState.minors);
                 } else {
-                    console.log("invalid file format");
+                    toast.error('Invalid file format', {
+                        position: "bottom-center",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                 }
             } catch (SyntaxError) {
-                console.log("invalid file format");
+                toast.error('Invalid file format', {
+                    position: "bottom-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
             }
         }
         reader.readAsText(file);
@@ -297,7 +314,15 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             list.push(course);
             this.updateList(listId, list);
         } else {
-            console.log("course already exists");
+            toast.error('Class already exists', {
+                position: "bottom-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         }
     }
 

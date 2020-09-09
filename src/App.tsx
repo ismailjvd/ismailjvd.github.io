@@ -7,6 +7,7 @@ import DegreeSelector from "./components/DegreeSelector";
 import SchedulerContainer from "./components/SchedulerContainer";
 import degreeData from "./components/DegreeData";
 import Modal from './components/Modal';
+import { ToastContainer } from 'react-toastify';
 
 import "../assets/style/App.css";
 import "../assets/style/Header.css";
@@ -16,6 +17,7 @@ import "../assets/style/CourseList.css";
 import "../assets/style/Modal.css";
 import "../assets/style/DraggableItem.css";
 import "../assets/style/DeleteContainer.css";
+import "react-toastify/dist/ReactToastify.css";
 
 const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     let state = {
@@ -82,6 +84,17 @@ class App extends React.Component {
                 />
                 <Counter />
                 {modal}
+                <ToastContainer
+                    position="bottom-center"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
             </div>
         )
     };
