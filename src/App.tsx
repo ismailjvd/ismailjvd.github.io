@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { render } from 'react-dom';
 
-import Counter from './components/Counter';
 import Header from './components/Header';
 import DegreeSelector from "./components/DegreeSelector";
 import SchedulerContainer from "./components/SchedulerContainer";
@@ -108,7 +107,6 @@ class App extends React.Component {
                     setModal={this.updateModal}
                     updateDegrees={this.updateChosenDegrees}
                 />
-                <Counter />
                 {modal}
                 <ToastContainer
                     position="bottom-center"
