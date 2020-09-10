@@ -1,14 +1,15 @@
 import * as React from 'react';
-import CourseList from './CourseList';
+import CourseList, { listIdToTitle } from './CourseList';
 import { DraggableItem } from './CourseList';
 import degreeData from './DegreeData';
 import { _ } from 'lodash';
 import { faTrashAlt, faEllipsisV, faLink, faFileDownload, faFileImport } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from './Modal';
-import { ancestorHasClass, copyToClipboard } from '../functions/helperFunctions';
+import { ancestorHasClass, copyToClipboard, showToast } from '../functions/helperFunctions';
 import DeleteContainer from './DeleteContainer';
 import { toast } from 'react-toastify';
+
 
 /* Constants */
 
@@ -268,26 +269,10 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     this.setState(newState);
                     this.props.updateDegrees(newState.majors, newState.minors);
                 } else {
-                    toast.error('Invalid file format', {
-                        position: "bottom-center",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
+                    showToast('Invalid file format', 'error');
                 }
             } catch (SyntaxError) {
-                toast.error('Invalid file format', {
-                    position: "bottom-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
+                showToast('Invalid file format', 'error');
             }
         }
         reader.readAsText(file);
@@ -363,7 +348,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return this.state.clickedItem;
     }
 
-    moveItemToList = (source: ListId, dest: ListId, course: string) => {
+    moveItemToList = (source: ListId, dest: ListId, course: string, courseType: ListId) => {
         if (dest === "custom") {
             let list: Array<string> = this.state[source];
             let index = list.indexOf(course);
@@ -384,6 +369,12 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     list2.push(course);
                 }
                 this.updateLists(source, dest, list1, list2);
+            }
+        } else {
+            if (source !== dest) {
+                let courseListName = listIdToTitle[courseType];
+                let listName = listIdToTitle[dest];
+                showToast("Cannot move " + courseListName + " course to " + listName, "error");
             }
         }
     }
@@ -420,30 +411,14 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             list.push(course);
             this.updateList(listId, list);
         } else {
-            toast.error('Class already exists', {
-                position: "bottom-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            showToast('Class already exists', 'error');
         }
     }
 
     handleCopyLink = () => {
         let url = this.getURLFromState();
         copyToClipboard(url);
-        toast.success('✓ Copied link to clipboard', {
-            position: "bottom-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-        });
+        showToast('✓ Copied link to clipboard', 'success');
     }
 
     /* JSX Helpers */

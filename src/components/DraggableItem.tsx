@@ -30,7 +30,7 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
 
     handleOutsideClick = (e) => {
         document.removeEventListener("mousedown", this.handleOutsideClick);
-        if (!e.target.classList.contains("can-click") && !ancestorHasClass(e.target, "delete-container")) {
+        if (!e.target.classList.contains("click-overlay") && !ancestorHasClass(e.target, "delete-container")) {
             this.props.setClickedItem(undefined);
         }
     }

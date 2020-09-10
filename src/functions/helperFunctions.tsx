@@ -1,3 +1,5 @@
+import { toast, ToastPosition } from 'react-toastify';
+
 function ancestorHasClass(element, className: string) {
     let ele = element;
     while (ele && typeof(ele) !== undefined && ele.id !== "main-container") {
@@ -9,7 +11,7 @@ function ancestorHasClass(element, className: string) {
     return false;
 }
 
-const copyToClipboard = (text) => {
+const copyToClipboard = (text: string) => {
     var a = document.createElement("textarea");
     document.body.appendChild(a);
     a.value = text;
@@ -18,4 +20,21 @@ const copyToClipboard = (text) => {
     document.body.removeChild(a);
 }
 
-export { ancestorHasClass, copyToClipboard };
+const showToast = (message: string, type: "error" | "success") => {
+    const opts = {
+        position: "bottom-center" as ToastPosition,
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+    }
+    if (type === "error") {
+        toast.error(message, opts);
+    } else {
+        toast.success(message, opts);
+    }
+}
+
+export { ancestorHasClass, copyToClipboard, showToast };

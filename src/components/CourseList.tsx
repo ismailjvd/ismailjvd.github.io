@@ -4,7 +4,7 @@ import DraggableItem, { draggablesAreEqual } from './DraggableItem';
 import { ListId } from './SchedulerContainer';
 import { faPlusSquare } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { toast } from 'react-toastify';
+import { showToast } from '../functions/helperFunctions';
 
 /* Constants */
 
@@ -20,7 +20,7 @@ type ListProperties = {
     setClickedItem: (item: DraggableItem | undefined) => void;
     getClickedItem: () => DraggableItem | undefined;
     isValid: (source: ListId, dest: ListId, course: string) => boolean;
-    moveItemToList: (source: ListId, dest: ListId, course: string) => void;
+    moveItemToList: (source: ListId, dest: ListId, course: string, courseType: ListId) => void;
     getOriginalList: (course: string) => ListId;
     addClass: (listId: ListId, course:string) => void;
 }
@@ -169,7 +169,8 @@ class CourseList extends React.Component<ListProperties> {
             const course: string = item.props.name;
             const source: ListId = item.props.currentList;
             const dest: ListId = this.props.listId;
-            this.props.moveItemToList(source, dest, course);
+            const courseType: ListId = item.props.originalList;
+            this.props.moveItemToList(source, dest, course, courseType);
             this.props.setDraggedItem(undefined);
         }
         e.stopPropagation();
@@ -183,7 +184,8 @@ class CourseList extends React.Component<ListProperties> {
             const course: string = item.props.name;
             const source: ListId = item.props.currentList;
             const dest: ListId = this.props.listId;
-            this.props.moveItemToList(source, dest, course);
+            const courseType: ListId = item.props.originalList;
+            this.props.moveItemToList(source, dest, course, courseType);
             this.props.setClickedItem(undefined);
         }
     }
@@ -238,15 +240,7 @@ class CourseList extends React.Component<ListProperties> {
             this.props.addClass(this.props.listId, s);
             input.value = "";
         } else {
-            toast.error('Input is empty or contains invalid characters', {
-                position: "bottom-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            showToast('Input is empty or contains invalid characters', 'error');
         }
     }
 
@@ -349,4 +343,4 @@ class CourseList extends React.Component<ListProperties> {
 
 
 export default CourseList;
-export { DraggableItem };
+export { DraggableItem, listIdToTitle };
