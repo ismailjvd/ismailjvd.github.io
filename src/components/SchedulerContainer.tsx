@@ -10,6 +10,11 @@ import { ancestorHasClass, copyToClipboard } from '../functions/helperFunctions'
 import DeleteContainer from './DeleteContainer';
 import { toast } from 'react-toastify';
 
+/* Constants */
+
+const MAX_URL_LENGTH = 94;
+const BASE_URL = "https://ismailjvd.github.io/";
+
 /* Type Declarations */
 
 type SchedulerProperties = {
@@ -309,14 +314,14 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     getURLFromState = (): string => {
         const state = this.getStringifiedScheduleState();
         let u = new URLSearchParams(state);
-        return "http://localhost:1234/?" + u.toString();
+        return BASE_URL + "?" + u.toString();
     }
 
     createURLElement = (): JSX.Element => {
         const url = this.getURLFromState();
         let displayedUrl = url;
-        if (displayedUrl.length > 94) {
-            displayedUrl = displayedUrl.slice(0, 90) + "...";
+        if (displayedUrl.length > MAX_URL_LENGTH) {
+            displayedUrl = displayedUrl.slice(0, MAX_URL_LENGTH - 4) + "...";
         }
         return <a href={url} target="_blank">{displayedUrl}</a>;
     }

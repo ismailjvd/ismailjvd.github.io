@@ -6,6 +6,10 @@ import { faPlusSquare } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from 'react-toastify';
 
+/* Constants */
+
+const MAX_INPUT_LENGTH = 20;
+
 /* Type Declarations */
 
 type ListProperties = {
@@ -67,7 +71,7 @@ class SearchBar extends React.Component<SearchBarProperties> {
             value={this.props.value} 
             placeholder="&#xf002;  Search for a class..."
             onChange={(e) => this.props.setFilter(e.target.value)}
-            maxLength={20}
+            maxLength={MAX_INPUT_LENGTH}
         />
     }
 }
@@ -80,7 +84,7 @@ function AddClassBar(props: AddClassBarProperties) {
                 className="add-class-bar no-select" 
                 placeholder="Add new class..."
                 id={props.listId + "-" + "add-bar"}
-                maxLength={20}
+                maxLength={MAX_INPUT_LENGTH}
                 onKeyDown={(e) => {
                     if (e.keyCode === 13) {
                         const input: HTMLInputElement = document.getElementById(props.listId + "-" + "add-bar") as HTMLInputElement;
