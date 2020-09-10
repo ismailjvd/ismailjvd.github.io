@@ -76,3 +76,11 @@
 .modal-button.negative:hover {
     background-color: #fefefe;
 }
+
+@media (max-width: 520px) {
+    .modal-container {
+        width: 90%;
+        left: 5%;
+        margin-left: 0px;
+    }
+}

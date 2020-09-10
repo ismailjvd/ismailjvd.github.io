@@ -73,7 +73,7 @@
     right: 12px;
     top: 6px;
     font-size: 18px;
-    padding: 4px 4px;
+    margin: 4px 4px;
     color: rgb(182, 182, 182);
 }
 
@@ -179,5 +179,13 @@ div::-webkit-scrollbar-thumb {
     }
     .list-search-bar {
         font-size: 14px;
+    }
+    .add-class-bar {
+        font-size: 14px;
+    }
+    .add-class-button {
+        margin: 3px 0px;
+        padding: 0px 4px;
+        background-color: white;
     }
 }
