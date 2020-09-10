@@ -54,16 +54,28 @@
 .schedule-button {
     font-size: 18px;
     text-align: center;
+    background-color: #6898f3;
+    border-radius: 50%;
 }
 
 .schedule-button:hover {
     cursor: pointer;
+    filter: brightness(0.92);
 }
 
 #delete-schedule {
     position: absolute;
     top: 22px;
-    right: 80px;
+    right: 112px;
+    color: white;
+    width: 28px;
+    padding: 4px;
+}
+
+#copy-link-schedule {
+    position: absolute;
+    top: 22px;
+    right: 72px;
     color: white;
     width: 28px;
     padding: 4px;
@@ -204,13 +216,18 @@
     }
     #delete-schedule {
         top: 23px;
-        right: 60px;
+        right: 86px;
+    }
+    #copy-link-schedule {
+        top: 23px;
+        right: 54px;
     }
     #menu-reference {
         top: 23px;
         right: 26px;
     }
     .menu-container {
+        top: 2px;
         right: -10px;
         width: 200px;
     }

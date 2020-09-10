@@ -511,7 +511,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         const menuClass = this.state.isMenuOpen ? "menu-container menu-open" : "menu-container";
         return (
             <div className="menu-reference" id="menu-reference">
-                <div className="schedule-button" id="menu-button" onClick={this.menuToggle}>
+                <div className="schedule-button menu-button" id="menu-button" onClick={this.menuToggle}>
                     <FontAwesomeIcon icon={faEllipsisV} className="fa-icon"/>
                 </div>
                 <div className={menuClass} id="menu-container">
@@ -546,7 +546,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     handleMenuOutsideClick = (e) => {
         if (this.state.isMenuOpen) {
-            if (!ancestorHasClass(e.target, "menu-reference")) {
+            if (!ancestorHasClass(e.target, "menu-container") && !ancestorHasClass(e.target, "menu-button")) {
                 document.removeEventListener("mousedown", this.handleMenuOutsideClick);
                 this.setState({
                     isMenuOpen: false,
@@ -591,7 +591,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         />
                     break;
                 case "copy-link":
-                    this.menuToggle();
+                    if (this.state.isMenuOpen) {
+                        this.menuToggle();
+                    }
                     modal = 
                         <Modal 
                             message = {<div>URL: {this.createURLElement()}</div>}
@@ -602,7 +604,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         />
                     break;
                 case "export":
-                        this.menuToggle();
+                        if (this.state.isMenuOpen) {
+                            this.menuToggle();
+                        }
                         modal = 
                             <Modal 
                                 message = {<div>Save your current schedule as a .sch, which can later be imported</div>}
@@ -613,7 +617,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                             />
                         break;
                 case "import":
-                        this.menuToggle();
+                        if (this.state.isMenuOpen) {
+                            this.menuToggle();
+                        }
                         modal = 
                             <Modal 
                                 message = {<div>Load a schedule from a .sch file <br />(Note: this may overwrite your current schedule)</div>}
@@ -645,6 +651,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     <div id="schedule-lists-title" className="lists-title no-select">Your Schedule</div>
                     <div id="delete-schedule" className="schedule-button" onClick={this.showModal("delete")}>
                         <FontAwesomeIcon icon={faTrashAlt} />
+                    </div>
+                    <div id="copy-link-schedule" className="schedule-button" onClick={this.showModal("copy-link")}>
+                        <FontAwesomeIcon icon={faLink} />
                     </div>
                     {this.createMenu()}
                     <div id="schedule-lists-container" className="lists-container">
