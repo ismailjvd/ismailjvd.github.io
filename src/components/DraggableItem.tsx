@@ -47,6 +47,13 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
         }
     }
 
+    handleTouchEnd = () => {
+        if (this.props.getDraggedItem()) {
+            this.props.setDraggedItem(undefined);
+            this.handleClick();
+        }
+    }
+
     render() {
         let className = this.props.itemClass;
         className += " " + this.props.originalList;
@@ -57,6 +64,7 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
                 onDragStart={this.handleDragStart}
                 onDragEnd={this.handleDragEnd}
                 onClick={this.handleClick}
+                onTouchEnd={this.handleTouchEnd}
             >
                 <div className={className}>
                     {this.props.name}
