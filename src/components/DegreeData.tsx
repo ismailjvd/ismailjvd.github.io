@@ -1,4 +1,4 @@
-import data from '../../assets/data/degrees.json';
+import data from '.././assets/data/degrees.json';
 import { _, union } from 'lodash';
 import { ListData } from './SchedulerContainer';
 

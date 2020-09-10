@@ -8,16 +8,16 @@ import degreeData from "./components/DegreeData";
 import Modal from './components/Modal';
 import { ToastContainer } from 'react-toastify';
 
-import "../assets/style/App.css";
-import "../assets/style/Header.css";
-import "../assets/style/DegreeSelector.css";
-import "../assets/style/SchedulerContainer.css";
-import "../assets/style/CourseList.css";
-import "../assets/style/Modal.css";
-import "../assets/style/DraggableItem.css";
-import "../assets/style/DeleteContainer.css";
+import "./assets/style/App.css";
+import "./assets/style/Header.css";
+import "./assets/style/DegreeSelector.css";
+import "./assets/style/SchedulerContainer.css";
+import "./assets/style/CourseList.css";
+import "./assets/style/Modal.css";
+import "./assets/style/DraggableItem.css";
+import "./assets/style/DeleteContainer.css";
 import "react-toastify/dist/ReactToastify.css";
-import "../assets/style/ToastOverides.css";
+import "./assets/style/ToastOverides.css";
 
 const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     if (window.location.search.length > 0) {
