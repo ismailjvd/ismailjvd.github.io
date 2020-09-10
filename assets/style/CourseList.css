@@ -99,7 +99,7 @@
     border-top-width: 3px;
     border-bottom-width: 5px;
     border-right-width: 0px;
-    transition: 0.12s ease-in-out;
+    transition: background-color 0.12s ease-in-out, outline 0.06s ease, opacity 0.2s ease;
 }
 
 div::-webkit-scrollbar {
@@ -118,11 +118,18 @@ div::-webkit-scrollbar-thumb {
 /* Dragging Modifiers */
 
 .can-drop {
-    background-color: rgb(211, 211, 211);
+    outline-style: dashed;
+    outline-color: #999999;
+    outline-width: 2px;
+    outline-offset: -4px;
 }
 
 .no-drop {
-    background-color: rgb(255, 197, 197);
+    opacity: 0.4;
+}
+
+.dragging-can-drop {
+    background-color: rgb(211, 211, 211);
 }
 
 /* Clicking Modifiers */

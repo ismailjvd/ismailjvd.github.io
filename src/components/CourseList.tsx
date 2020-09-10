@@ -122,6 +122,12 @@ class CourseList extends React.Component<ListProperties> {
         if(!nextProps.getDraggedItem() && prevState.dragging) {
             return {dragging: false};
         }
+        if (nextProps.getDraggedItem()) {
+            let item = nextProps.getDraggedItem();
+            if (nextProps.isValid(item.props.currentList, nextProps.listId, item.props.name) !== prevState.droppable) {
+                return {droppable: !prevState.droppable};
+            }
+        }
         return null;
     }
 
@@ -276,8 +282,9 @@ class CourseList extends React.Component<ListProperties> {
     getListClass = (): string => {
         let cn = "course-list";
         if (this.props.getDraggedItem()) {
+            cn += this.state.droppable ? " can-drop": " no-drop";
             if (this.state.dragging) {
-                cn = this.state.droppable ? cn + " can-drop" : cn + " no-drop";
+                cn = this.state.droppable ? cn + " dragging-can-drop" : cn;
             }
         }
         return cn;
