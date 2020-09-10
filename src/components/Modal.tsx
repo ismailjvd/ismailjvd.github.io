@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ancestorHasClass } from '../functions/helperFunctions';
 
 type ModalProps = {
-    message: string,
+    message: JSX.Element,
     posText: string,
     negText: string,
     posAction: () => void,

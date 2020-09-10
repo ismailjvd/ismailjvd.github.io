@@ -18,8 +18,12 @@ import "../assets/style/Modal.css";
 import "../assets/style/DraggableItem.css";
 import "../assets/style/DeleteContainer.css";
 import "react-toastify/dist/ReactToastify.css";
+import "../assets/style/ToastOverides.css";
 
 const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
+    if (window.location.search.length > 0) {
+        return getStateFromURL();
+    }
     let state = {
         majors: [degreeData.getSortedMajors()[0]],
         minors: [],
@@ -44,6 +48,28 @@ const cacheState = (key, state) => {
 
 const getStateFromCache = (key) => {
     return JSON.parse(localStorage[key]);
+}
+
+const getStateFromURL = () => {
+    const queryString = window.location.search;
+    let u = new URLSearchParams(queryString);
+    let state = {};
+    let keys = ["majors", "minors"];
+    keys.forEach(key => {
+        if (u.has(key)) {
+            let list: Array<string> = JSON.parse(u.get(key));
+            state[key] = list;
+        } else {
+            state[key] = [];
+        }
+    });
+    let newState = {
+        majors: state["majors"],
+        minors: state["minors"],
+        modal: undefined
+    }
+    cacheState("currState", newState);
+    return newState;
 }
 
 class App extends React.Component {

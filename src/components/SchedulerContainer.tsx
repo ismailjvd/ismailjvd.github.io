@@ -6,7 +6,7 @@ import { _ } from 'lodash';
 import { faTrashAlt, faEllipsisV, faLink, faFileDownload, faFileImport } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from './Modal';
-import { ancestorHasClass } from '../functions/helperFunctions';
+import { ancestorHasClass, copyToClipboard } from '../functions/helperFunctions';
 import DeleteContainer from './DeleteContainer';
 import { toast } from 'react-toastify';
 
@@ -54,6 +54,9 @@ type ListId = "lowerDivList" | "upperDivList" | "breadthList" | "minorList" |
 /* State and Cache functions */
 
 const getInitialState = (majors: Array<string>, minors: Array<string>): SchedulerState => {
+    if (window.location.search.length > 0) {
+        return getStateFromURL();
+    }
     let state: SchedulerState = {
         draggedItem: undefined,
         clickedItem: undefined,
@@ -77,6 +80,8 @@ const getInitialState = (majors: Array<string>, minors: Array<string>): Schedule
     const cacheKey: string = getCacheKey(majors, minors);
     if (localStorage[cacheKey]) {
         state = getStateFromCache(cacheKey);
+        // Ensures there are no duplicates in any of the class lists
+        state = constructStateFromSchedule(state);
     } else {
         state.lowerDivList = degreeData.getSortedLowerDivs(majors)
         state.upperDivList = degreeData.getSortedUpperDivs(majors)
@@ -114,6 +119,95 @@ const getCacheKey = (majors: Array<string>, minors: Array<string>) => {
     return degrees;
 }
 
+const copyState = (state: SchedulerState): SchedulerState => {
+    return {
+        draggedItem: undefined,
+        clickedItem: undefined,
+        isMenuOpen: false,
+        majors: [...state.majors],
+        minors: [...state.minors],
+        courseListMap: {...state.courseListMap},
+        lowerDivList: [...state.lowerDivList],
+        upperDivList: [...state.upperDivList],
+        breadthList: [...state.breadthList],
+        minorList: [...state.minorList],
+        fa1List: [...state.fa1List],
+        sp1List: [...state.sp1List],
+        fa2List: [...state.fa2List],
+        sp2List: [...state.sp2List],
+        fa3List: [...state.fa3List],
+        sp3List: [...state.sp3List],
+        fa4List: [...state.fa4List],
+        sp4List: [...state.sp4List]
+    }
+}
+
+const getStateFromURL = (): SchedulerState => {
+    const queryString = window.location.search;
+    let u = new URLSearchParams(queryString);
+    let state = {};
+    let keys = ["majors", "minors", "fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+    keys.forEach(key => {
+        if (u.has(key)) {
+            let list: Array<string> = JSON.parse(u.get(key));
+            state[key] = list;
+        } else {
+            state[key] = [];
+        }
+    });
+    let newState = constructStateFromSchedule(state);
+    cacheState(getCacheKey(newState.majors, newState.minors), newState);
+    window.location.search = "";
+    return newState;
+}
+
+const constructStateFromSchedule = (state: Partial<SchedulerState>): SchedulerState => {
+    let newState: SchedulerState = {
+        draggedItem: undefined,
+        clickedItem: undefined,
+        isMenuOpen: false,
+        majors: state.majors,
+        minors: state.minors,
+        courseListMap: degreeData.createCourseListMap(state.majors, state.minors), 
+        lowerDivList: degreeData.getSortedLowerDivs(state.majors),
+        upperDivList: degreeData.getSortedUpperDivs(state.majors),
+        breadthList: degreeData.getSortedBreadths(state.majors, state.minors),
+        minorList: degreeData.getSortedMinorCourses(state.majors, state.minors),
+        fa1List: state.fa1List,
+        sp1List: state.sp1List,
+        fa2List: state.fa2List,
+        sp2List: state.sp2List,
+        fa3List: state.fa3List,
+        sp3List: state.sp3List,
+        fa4List: state.fa4List,
+        sp4List: state.sp4List
+    };
+
+    return getStateWithNoDuplicates(newState);
+}
+
+const getStateWithNoDuplicates = (state: SchedulerState): SchedulerState => {
+    let newState = copyState(state);
+    let scheduleCourses: Array<string> = [];
+    let scheduleLists = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+    scheduleLists.forEach(listId => {
+        let list = newState[listId];
+        scheduleCourses = [...scheduleCourses].concat([...list]);
+    });
+    scheduleCourses.forEach(course => {
+        if (course in newState.courseListMap) {
+            let listId: ListId = newState.courseListMap[course];
+            let list: Array<string> = newState[listId];
+            if (list.indexOf(course) !== -1) {
+                list.splice(list.indexOf(course), 1);
+                newState[listId] = [...list];
+            }
+        }
+    })
+    return newState;
+}
+
+
 class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     /* State functions */
@@ -128,29 +222,6 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     state = getInitialState(this.props.majors, this.props.minors);
 
-    copyState = (): SchedulerState => {
-        return {
-            draggedItem: undefined,
-            clickedItem: undefined,
-            isMenuOpen: false,
-            majors: [...this.state.majors],
-            minors: [...this.state.minors],
-            courseListMap: {...this.state.courseListMap},
-            lowerDivList: [...this.state.lowerDivList],
-            upperDivList: [...this.state.upperDivList],
-            breadthList: [...this.state.breadthList],
-            minorList: [...this.state.minorList],
-            fa1List: [...this.state.fa1List],
-            sp1List: [...this.state.sp1List],
-            fa2List: [...this.state.fa2List],
-            sp2List: [...this.state.sp2List],
-            fa3List: [...this.state.fa3List],
-            sp3List: [...this.state.sp3List],
-            fa4List: [...this.state.fa4List],
-            sp4List: [...this.state.sp4List]
-        }
-    }
-
     isSchedulerState(state: any): state is SchedulerState {
         /* TODO: develop more accurate scheduler state checking system */
         let s = state as SchedulerState;
@@ -161,7 +232,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     }
 
     downloadStateAsJSON = () => {
-        const jsonData = JSON.stringify(this.copyState());
+        const jsonData = JSON.stringify(copyState(this.state));
         const data = "text/json;charset=utf-8," + encodeURIComponent(jsonData);
         let a = document.createElement('a');
         a.href = "data:" + data;
@@ -220,8 +291,38 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         fileElement.value = "";
     }
 
+    getStringifiedScheduleState = () => {
+        const state = {
+            majors: JSON.stringify(this.state.majors),
+            minors: JSON.stringify(this.state.minors),
+        }
+        const scheduleLists: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        scheduleLists.forEach(listId => {
+            let list = this.state[listId];
+            if (list.length > 0) {
+                state[listId] = JSON.stringify(list);
+            }
+        })
+        return state;
+    }
+
+    getURLFromState = (): string => {
+        const state = this.getStringifiedScheduleState();
+        let u = new URLSearchParams(state);
+        return "http://localhost:1234/?" + u.toString();
+    }
+
+    createURLElement = (): JSX.Element => {
+        const url = this.getURLFromState();
+        let displayedUrl = url;
+        if (displayedUrl.length > 94) {
+            displayedUrl = displayedUrl.slice(0, 90) + "...";
+        }
+        return <a href={url} target="_blank">{displayedUrl}</a>;
+    }
+
     updateLists = (source: ListId, dest: ListId, list1: Array<string>, list2: Array<string>) => {
-        let newState: SchedulerState = this.copyState();
+        let newState: SchedulerState = copyState(this.state);
         newState[source] = list1;
         newState[dest] = list2;
         cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), newState);
@@ -229,7 +330,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     }
 
     updateList(listId: ListId, list: Array<string>) {
-        let newState: SchedulerState = this.copyState();
+        let newState: SchedulerState = copyState(this.state);
         newState[listId] = list;
         cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), newState);
         this.setState(newState);
@@ -324,6 +425,20 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                 progress: undefined,
             });
         }
+    }
+
+    handleCopyLink = () => {
+        let url = this.getURLFromState();
+        copyToClipboard(url);
+        toast.success('✓ Copied link to clipboard', {
+            position: "bottom-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
     }
 
     /* JSX Helpers */
@@ -463,7 +578,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                 case "delete":
                     modal = 
                         <Modal 
-                            message = "This action will delete the current schedule. Proceed?"
+                            message = {<div>This action will delete the current schedule. Proceed?</div>}
                             posText = "Clear"
                             negText = "Cancel"
                             posAction = {this.handleDeleteClick}
@@ -474,10 +589,10 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     this.menuToggle();
                     modal = 
                         <Modal 
-                            message = "URL: "
+                            message = {<div>URL: {this.createURLElement()}</div>}
                             posText = "Copy Link"
                             negText = "Cancel"
-                            posAction = {() => {}}
+                            posAction = {this.handleCopyLink}
                             setModal = {this.props.setModal}
                         />
                     break;
@@ -485,7 +600,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         this.menuToggle();
                         modal = 
                             <Modal 
-                                message = "Save your current schedule as a .sch, which can later be imported"
+                                message = {<div>Save your current schedule as a .sch, which can later be imported</div>}
                                 posText = "Download"
                                 negText = "Cancel"
                                 posAction = {this.downloadStateAsJSON}
@@ -496,7 +611,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         this.menuToggle();
                         modal = 
                             <Modal 
-                                message = "Load a schedule from a .sch file"
+                                message = {<div>Load a schedule from a .sch file <br />(Note: this may overwrite your current schedule)</div>}
                                 posText = "Browse"
                                 negText = "Cancel"
                                 posAction = {this.uploadJSONFile}
