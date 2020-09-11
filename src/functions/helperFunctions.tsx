@@ -37,4 +37,27 @@ const showToast = (message: string, type: "error" | "success") => {
     }
 }
 
-export { ancestorHasClass, copyToClipboard, showToast };
+const isPhone = (): boolean => {
+    return window.matchMedia('@media only screen and (max-width: 720px)').matches;
+}
+
+const showStartingToast = () => {
+    window.setTimeout(function() {
+        if (!localStorage["starting-toast"]) {
+            let message = "👋 Drag or click a course to get started";
+            if (isPhone()) {
+                message = "👋 Tap a course to get started";
+            }
+            toast.info(message, {
+                position: "bottom-center",
+                autoClose: false,
+                hideProgressBar: true,
+                closeOnClick: true,
+                progress: undefined,
+                toastId: "starting-toast"
+            })
+        }
+    }, 16000);
+}
+
+export { ancestorHasClass, copyToClipboard, showToast, isPhone, showStartingToast };

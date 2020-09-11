@@ -14,7 +14,7 @@ import { toast } from 'react-toastify';
 /* Constants */
 
 const MAX_URL_LENGTH = 94;
-const BASE_URL = "https://ismailjvd.github.io/";
+const BASE_URL = "https://scheduleberkeley.com/";
 
 /* Type Declarations */
 

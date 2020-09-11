@@ -7,7 +7,7 @@ import ResourceContainer from './components/ResourceContainer';
 import SchedulerContainer from "./components/SchedulerContainer";
 import degreeData from "./components/DegreeData";
 import Modal from './components/Modal';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 
 import "./assets/style/App.css";
 import "./assets/style/Header.css";
@@ -20,6 +20,7 @@ import "./assets/style/DraggableItem.css";
 import "./assets/style/DeleteContainer.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./assets/style/ToastOverides.css";
+import { showStartingToast } from './functions/helperFunctions';
 
 const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     if (window.location.search.length > 0) {
@@ -92,6 +93,7 @@ class App extends React.Component {
     render() {
         let state = this.state;
         let modal = null;
+        showStartingToast();
         if (this.state.modal && typeof(this.state.modal) !== undefined) {
             modal = this.state.modal;
         }
