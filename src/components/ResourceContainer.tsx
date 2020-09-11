@@ -20,7 +20,7 @@ type DegreeWithResources = {
 export default class ResourceContainer extends React.Component<ResourceContainerProps> {
 
     state = {
-        showResources: true
+        showResources: false
     }
 
     getResourcesWrapper = (): JSX.Element => {
