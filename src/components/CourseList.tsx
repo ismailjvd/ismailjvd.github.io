@@ -4,7 +4,11 @@ import DraggableItem, { draggablesAreEqual } from './DraggableItem';
 import { ListId } from './SchedulerContainer';
 import { faPlusSquare } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { toast } from 'react-toastify';
+import { showToast } from '../functions/helperFunctions';
+
+/* Constants */
+
+const MAX_INPUT_LENGTH = 20;
 
 /* Type Declarations */
 
@@ -16,7 +20,7 @@ type ListProperties = {
     setClickedItem: (item: DraggableItem | undefined) => void;
     getClickedItem: () => DraggableItem | undefined;
     isValid: (source: ListId, dest: ListId, course: string) => boolean;
-    moveItemToList: (source: ListId, dest: ListId, course: string) => void;
+    moveItemToList: (source: ListId, dest: ListId, course: string, courseType: ListId) => void;
     getOriginalList: (course: string) => ListId;
     addClass: (listId: ListId, course:string) => void;
 }
@@ -67,7 +71,7 @@ class SearchBar extends React.Component<SearchBarProperties> {
             value={this.props.value} 
             placeholder="&#xf002;  Search for a class..."
             onChange={(e) => this.props.setFilter(e.target.value)}
-            maxLength={20}
+            maxLength={MAX_INPUT_LENGTH}
         />
     }
 }
@@ -80,7 +84,7 @@ function AddClassBar(props: AddClassBarProperties) {
                 className="add-class-bar no-select" 
                 placeholder="Add new class..."
                 id={props.listId + "-" + "add-bar"}
-                maxLength={20}
+                maxLength={MAX_INPUT_LENGTH}
                 onKeyDown={(e) => {
                     if (e.keyCode === 13) {
                         const input: HTMLInputElement = document.getElementById(props.listId + "-" + "add-bar") as HTMLInputElement;
@@ -117,6 +121,12 @@ class CourseList extends React.Component<ListProperties> {
     static getDerivedStateFromProps(nextProps: ListProperties, prevState: ListState) {
         if(!nextProps.getDraggedItem() && prevState.dragging) {
             return {dragging: false};
+        }
+        if (nextProps.getDraggedItem()) {
+            let item = nextProps.getDraggedItem();
+            if (nextProps.isValid(item.props.currentList, nextProps.listId, item.props.name) !== prevState.droppable) {
+                return {droppable: !prevState.droppable};
+            }
         }
         return null;
     }
@@ -165,7 +175,8 @@ class CourseList extends React.Component<ListProperties> {
             const course: string = item.props.name;
             const source: ListId = item.props.currentList;
             const dest: ListId = this.props.listId;
-            this.props.moveItemToList(source, dest, course);
+            const courseType: ListId = item.props.originalList;
+            this.props.moveItemToList(source, dest, course, courseType);
             this.props.setDraggedItem(undefined);
         }
         e.stopPropagation();
@@ -179,7 +190,8 @@ class CourseList extends React.Component<ListProperties> {
             const course: string = item.props.name;
             const source: ListId = item.props.currentList;
             const dest: ListId = this.props.listId;
-            this.props.moveItemToList(source, dest, course);
+            const courseType: ListId = item.props.originalList;
+            this.props.moveItemToList(source, dest, course, courseType);
             this.props.setClickedItem(undefined);
         }
     }
@@ -234,15 +246,7 @@ class CourseList extends React.Component<ListProperties> {
             this.props.addClass(this.props.listId, s);
             input.value = "";
         } else {
-            toast.error('Input is empty or contains invalid characters', {
-                position: "bottom-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            showToast('Input is empty or contains invalid characters', 'error');
         }
     }
 
@@ -278,8 +282,9 @@ class CourseList extends React.Component<ListProperties> {
     getListClass = (): string => {
         let cn = "course-list";
         if (this.props.getDraggedItem()) {
+            cn += this.state.droppable ? " can-drop": " no-drop";
             if (this.state.dragging) {
-                cn = this.state.droppable ? cn + " can-drop" : cn + " no-drop";
+                cn = this.state.droppable ? cn + " dragging-can-drop" : cn;
             }
         }
         return cn;
@@ -345,4 +350,4 @@ class CourseList extends React.Component<ListProperties> {
 
 
 export default CourseList;
-export { DraggableItem };
+export { DraggableItem, listIdToTitle };

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import logo from "../../assets/img/Logo.png";
+import logo from ".././assets/img/Logo.png";
 
 class Header extends React.Component {
     render () {

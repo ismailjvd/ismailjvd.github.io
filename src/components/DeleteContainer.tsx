@@ -9,7 +9,7 @@ type DeleteContainerProps = {
     setDraggedItem: (item: DraggableItem | undefined) => void;
     getClickedItem: () => DraggableItem | undefined;
     setClickedItem: (item: DraggableItem | undefined) => void;
-    moveItemToList: (source: ListId, dest: ListId, course: string) => void;
+    moveItemToList: (source: ListId, dest: ListId, course: string, courseType: ListId) => void;
 }
 
 type DeleteContainerState = {
@@ -63,7 +63,8 @@ export default class DeleteContainer extends React.Component<DeleteContainerProp
             const course: string = item.props.name;
             const source: ListId = item.props.currentList;
             const dest: ListId = item.props.originalList;
-            this.props.moveItemToList(source, dest, course);
+            const courseType: ListId = item.props.originalList;
+            this.props.moveItemToList(source, dest, course, courseType);
             this.props.setDraggedItem(undefined);
         }
         e.stopPropagation();
@@ -75,7 +76,8 @@ export default class DeleteContainer extends React.Component<DeleteContainerProp
             const course: string = item.props.name;
             const source: ListId = item.props.currentList;
             const dest: ListId = item.props.originalList;
-            this.props.moveItemToList(source, dest, course);
+            const courseType: ListId = item.props.originalList;
+            this.props.moveItemToList(source, dest, course, courseType);
             this.props.setClickedItem(undefined);
         }
     }

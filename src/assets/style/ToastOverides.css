@@ -1,3 +1,7 @@
+.Toastify__toast-container {
+    width: 340px;
+}
+
 .Toastify__toast-body {
     margin: auto 4px;
 }

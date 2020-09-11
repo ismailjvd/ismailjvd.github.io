@@ -1,0 +1,100 @@
+.resource-container-wrapper {
+    text-align: center;
+    position: relative;
+    width: 66vw;
+}
+
+.resources-checkbox {
+    margin: 0px 8px;
+    width: 16px;
+    height: 16px;
+}
+
+.show-resources {
+    font-size: 18px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.resources-wrapper {
+    background-color: rgb(248, 248, 248);
+    box-shadow: 0 2px 8px 2px #ccc;
+    margin: 16px 4px;
+}
+
+.resources-header {
+    font-size: 22px;
+    font-family: FontAwesome, Sen, sans-serif;
+    width: 100%;
+    padding: 4px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    background-color: #6898f3;
+    color: white;
+}
+
+.resources-container {
+    padding: 4px 12px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.resources-degree-container {
+    border-radius: 4px;
+    margin: 16px;
+    border: solid 1px #cccccc;
+    width: 92%;
+}
+
+.resources-degree-title {
+    font-size: 18px;
+    width: 100%;
+    color: #333333;
+    padding: 4px;
+    background-color: #e2e2e2;
+    border-bottom: solid 1px #999999;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.resource-info {
+    padding: 6px 4px;
+    border-bottom: solid 1px #aaaaaa;
+}
+
+.resource-title {
+    font-size: 16px;
+}
+
+.resource-description {
+    font-family: 'Calibri', sans-serif;
+    padding: 4px 4px;
+    font-size: 16px;
+}
+
+@media (max-width: 1400px) {
+    .resource-container-wrapper {
+        width: 80vw;
+    }
+}
+
+@media (max-width: 520px) {
+    .resource-container-wrapper {
+        width: 92vw;
+    }
+    .show-resources {
+        font-size: 16px;
+    }
+    .resources-header {
+        font-size: 20px;
+    }
+    .resources-degree-title {
+        font-size: 16px;
+    }
+}

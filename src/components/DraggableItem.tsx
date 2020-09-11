@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { ListId } from './SchedulerContainer';
 import { ancestorHasClass } from '../functions/helperFunctions';
+import { toast } from 'react-toastify';
 
 type DraggableItemProperites = {
     name: string;
@@ -25,12 +26,16 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
         if (!this.props.getClickedItem()) {
             this.props.setClickedItem(this);
             document.addEventListener("mousedown", this.handleOutsideClick);
+            if (toast.isActive("starting-toast")) {
+                toast.dismiss("starting-toast");
+                localStorage["starting-toast"] = "false";
+            }
         }
     }
 
     handleOutsideClick = (e) => {
         document.removeEventListener("mousedown", this.handleOutsideClick);
-        if (!e.target.classList.contains("can-click") && !ancestorHasClass(e.target, "delete-container")) {
+        if (!e.target.classList.contains("click-overlay") && !ancestorHasClass(e.target, "delete-container")) {
             this.props.setClickedItem(undefined);
         }
     }
@@ -38,12 +43,23 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
     handleDragStart = () => {
         if (!this.props.getDraggedItem()) {
             this.props.setDraggedItem(this);
+            if (toast.isActive("starting-toast")) {
+                toast.dismiss("starting-toast");
+                localStorage["starting-toast"] = "false";
+            }
         }
     }
 
     handleDragEnd = () => {
         if (this.props.getDraggedItem()) {
             this.props.setDraggedItem(undefined);
+        }
+    }
+
+    handleTouchEnd = () => {
+        if (this.props.getDraggedItem()) {
+            this.props.setDraggedItem(undefined);
+            this.handleClick();
         }
     }
 
@@ -57,6 +73,7 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
                 onDragStart={this.handleDragStart}
                 onDragEnd={this.handleDragEnd}
                 onClick={this.handleClick}
+                onTouchEnd={this.handleTouchEnd}
             >
                 <div className={className}>
                     {this.props.name}

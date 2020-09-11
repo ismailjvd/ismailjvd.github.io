@@ -1,14 +1,20 @@
 import * as React from 'react';
-import CourseList from './CourseList';
+import CourseList, { listIdToTitle } from './CourseList';
 import { DraggableItem } from './CourseList';
 import degreeData from './DegreeData';
 import { _ } from 'lodash';
 import { faTrashAlt, faEllipsisV, faLink, faFileDownload, faFileImport } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from './Modal';
-import { ancestorHasClass, copyToClipboard } from '../functions/helperFunctions';
+import { ancestorHasClass, copyToClipboard, showToast } from '../functions/helperFunctions';
 import DeleteContainer from './DeleteContainer';
 import { toast } from 'react-toastify';
+
+
+/* Constants */
+
+const MAX_URL_LENGTH = 94;
+const BASE_URL = "https://scheduleberkeley.com/";
 
 /* Type Declarations */
 
@@ -282,26 +288,10 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     this.setState(newState);
                     this.props.updateDegrees(newState.majors, newState.minors);
                 } else {
-                    toast.error('Invalid file format', {
-                        position: "bottom-center",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
+                    showToast('Invalid file format', 'error');
                 }
             } catch (SyntaxError) {
-                toast.error('Invalid file format', {
-                    position: "bottom-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
+                showToast('Invalid file format', 'error');
             }
         }
         reader.readAsText(file);
@@ -328,14 +318,14 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     getURLFromState = (): string => {
         const state = this.getStringifiedScheduleState();
         let u = new URLSearchParams(state);
-        return "http://localhost:1234/?" + u.toString();
+        return BASE_URL + "?" + u.toString();
     }
 
     createURLElement = (): JSX.Element => {
         const url = this.getURLFromState();
         let displayedUrl = url;
-        if (displayedUrl.length > 94) {
-            displayedUrl = displayedUrl.slice(0, 90) + "...";
+        if (displayedUrl.length > MAX_URL_LENGTH) {
+            displayedUrl = displayedUrl.slice(0, MAX_URL_LENGTH - 4) + "...";
         }
         return <a href={url} target="_blank">{displayedUrl}</a>;
     }
@@ -377,7 +367,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return this.state.clickedItem;
     }
 
-    moveItemToList = (source: ListId, dest: ListId, course: string) => {
+    moveItemToList = (source: ListId, dest: ListId, course: string, courseType: ListId) => {
         if (dest === "custom") {
             let list: Array<string> = this.state[source];
             let index = list.indexOf(course);
@@ -398,6 +388,12 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     list2.push(course);
                 }
                 this.updateLists(source, dest, list1, list2);
+            }
+        } else {
+            if (source !== dest) {
+                let courseListName = listIdToTitle[courseType];
+                let listName = listIdToTitle[dest];
+                showToast("Cannot move " + courseListName + " course to " + listName, "error");
             }
         }
     }
@@ -434,30 +430,14 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             list.push(course);
             this.updateList(listId, list);
         } else {
-            toast.error('Class already exists', {
-                position: "bottom-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            showToast('Class already exists', 'error');
         }
     }
 
     handleCopyLink = () => {
         let url = this.getURLFromState();
         copyToClipboard(url);
-        toast.success('✓ Copied link to clipboard', {
-            position: "bottom-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-        });
+        showToast('✓ Copied link to clipboard', 'success');
     }
 
     /* JSX Helpers */
@@ -485,36 +465,40 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     getYearContainers = (): Array<JSX.Element> => {
         const scheduleLists: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        const yearTitles: Array<string> = ["Freshman", "Sophomore", "Junior", "Senior"];
         let yearContainers: Array<JSX.Element> = [];
         for (let i=0;i<scheduleLists.length;i+=2) {
             yearContainers.push(
-                <div className="year-container" key={"container-"+scheduleLists[i]+"-"+scheduleLists[i+1]}>
-                    <CourseList 
-                        key={scheduleLists[i]}
-                        listId={scheduleLists[i]}
-                        courses={this.state[scheduleLists[i]]} 
-                        setDraggedItem={this.setDraggedItem}
-                        getDraggedItem={this.getDraggedItem}
-                        setClickedItem={this.setClickedItem}
-                        getClickedItem={this.getClickedItem}
-                        isValid={this.isValidMovement}
-                        moveItemToList={this.moveItemToList}
-                        getOriginalList={this.getOriginalListId}
-                        addClass={this.addClass}
-                    />
-                    <CourseList 
-                        key={scheduleLists[i+1]}
-                        listId={scheduleLists[i+1]}
-                        courses={this.state[scheduleLists[i+1]]} 
-                        setDraggedItem={this.setDraggedItem}
-                        getDraggedItem={this.getDraggedItem}
-                        setClickedItem={this.setClickedItem}
-                        getClickedItem={this.getClickedItem}
-                        isValid={this.isValidMovement}
-                        moveItemToList={this.moveItemToList}
-                        getOriginalList={this.getOriginalListId}
-                        addClass={this.addClass}
-                    />
+                <div className="year-wrapper" key={"container-"+scheduleLists[i]+"-"+scheduleLists[i+1]}>
+                    <div className="year-title">{yearTitles[i/2]}</div>
+                    <div className="year-container">
+                        <CourseList 
+                            key={scheduleLists[i]}
+                            listId={scheduleLists[i]}
+                            courses={this.state[scheduleLists[i]]} 
+                            setDraggedItem={this.setDraggedItem}
+                            getDraggedItem={this.getDraggedItem}
+                            setClickedItem={this.setClickedItem}
+                            getClickedItem={this.getClickedItem}
+                            isValid={this.isValidMovement}
+                            moveItemToList={this.moveItemToList}
+                            getOriginalList={this.getOriginalListId}
+                            addClass={this.addClass}
+                        />
+                        <CourseList 
+                            key={scheduleLists[i+1]}
+                            listId={scheduleLists[i+1]}
+                            courses={this.state[scheduleLists[i+1]]} 
+                            setDraggedItem={this.setDraggedItem}
+                            getDraggedItem={this.getDraggedItem}
+                            setClickedItem={this.setClickedItem}
+                            getClickedItem={this.getClickedItem}
+                            isValid={this.isValidMovement}
+                            moveItemToList={this.moveItemToList}
+                            getOriginalList={this.getOriginalListId}
+                            addClass={this.addClass}
+                        />
+                    </div>
                 </div>
             )
         }
@@ -525,7 +509,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         const menuClass = this.state.isMenuOpen ? "menu-container menu-open" : "menu-container";
         return (
             <div className="menu-reference" id="menu-reference">
-                <div className="schedule-button" id="menu-button" onClick={this.menuToggle}>
+                <div className="schedule-button menu-button" id="menu-button" onClick={this.menuToggle}>
                     <FontAwesomeIcon icon={faEllipsisV} className="fa-icon"/>
                 </div>
                 <div className={menuClass} id="menu-container">
@@ -560,7 +544,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     handleMenuOutsideClick = (e) => {
         if (this.state.isMenuOpen) {
-            if (!ancestorHasClass(e.target, "menu-reference")) {
+            if (!ancestorHasClass(e.target, "menu-container") && !ancestorHasClass(e.target, "menu-button")) {
                 document.removeEventListener("mousedown", this.handleMenuOutsideClick);
                 this.setState({
                     isMenuOpen: false,
@@ -605,7 +589,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         />
                     break;
                 case "copy-link":
-                    this.menuToggle();
+                    if (this.state.isMenuOpen) {
+                        this.menuToggle();
+                    }
                     modal = 
                         <Modal 
                             message = {<div>URL: {this.createURLElement()}</div>}
@@ -616,7 +602,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                         />
                     break;
                 case "export":
-                        this.menuToggle();
+                        if (this.state.isMenuOpen) {
+                            this.menuToggle();
+                        }
                         modal = 
                             <Modal 
                                 message = {<div>Save your current schedule as a .sch, which can later be imported</div>}
@@ -627,7 +615,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                             />
                         break;
                 case "import":
-                        this.menuToggle();
+                        if (this.state.isMenuOpen) {
+                            this.menuToggle();
+                        }
                         modal = 
                             <Modal 
                                 message = {<div>Load a schedule from a .sch file <br />(Note: this may overwrite your current schedule)</div>}
@@ -659,6 +649,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
                     <div id="schedule-lists-title" className="lists-title no-select">Your Schedule</div>
                     <div id="delete-schedule" className="schedule-button" onClick={this.showModal("delete")}>
                         <FontAwesomeIcon icon={faTrashAlt} />
+                    </div>
+                    <div id="copy-link-schedule" className="schedule-button" onClick={this.showModal("copy-link")}>
+                        <FontAwesomeIcon icon={faLink} />
                     </div>
                     {this.createMenu()}
                     <div id="schedule-lists-container" className="lists-container">

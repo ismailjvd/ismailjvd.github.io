@@ -5,7 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "parcel src/index.html"
+    "dev": "parcel src/index.html",
+    "create-build": "parcel build src/index.html -d docs",
+    "delete-build": "rm -R docs/App.*",
+    "git-rm-build": "git rm -r docs/App.*",
+    "git-add-build": "git add docs",
+    "build": "npm run -s delete-build && npm run -s git-rm-build && npm run -s create-build && npm run -s git-add-build"
   },
   "keywords": [],
   "author": "",
