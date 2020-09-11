@@ -20,7 +20,13 @@ import "./assets/style/DraggableItem.css";
 import "./assets/style/DeleteContainer.css";
 import "react-toastify/dist/ReactToastify.css";
 import "./assets/style/ToastOverides.css";
-import { showStartingToast } from './functions/helperFunctions';
+import { showStartingToast, showToast } from './functions/helperFunctions';
+
+const DEFAULT_STATE = {
+    majors: [degreeData.getSortedMajors()[0]],
+    minors: [],
+    modal: undefined
+}
 
 const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     if (window.location.search.length > 0) {
@@ -53,25 +59,52 @@ const getStateFromCache = (key) => {
 }
 
 const getStateFromURL = () => {
+    let isError = false;
     const queryString = window.location.search;
     let u = new URLSearchParams(queryString);
     let state = {};
     let keys = ["majors", "minors"];
     keys.forEach(key => {
         if (u.has(key)) {
-            let list: Array<string> = JSON.parse(u.get(key));
-            state[key] = list;
+            try {
+                let list: Array<string> = JSON.parse(u.get(key));
+                state[key] = list;
+            } catch (err) {
+                showToast("Major or minor has invalid value", "error");
+                isError = true;
+            }
         } else {
             state[key] = [];
         }
     });
+    const majors: Array<string> = state["majors"];
+    if (isError || !validDegrees(majors, "Major")) {
+        return DEFAULT_STATE;
+    }
+    let minors: Array<string> = state["minors"];
+    if (!validDegrees(minors, "Minor")) {
+        minors = [];
+    }
     let newState = {
-        majors: state["majors"],
-        minors: state["minors"],
+        majors: majors,
+        minors: minors,
         modal: undefined
     }
     cacheState("currState", newState);
     return newState;
+}
+
+const validDegrees = (degrees: Array<string>, type: "Major" | "Minor"): boolean => {
+    const validDegrees = type === "Major" ? degreeData.getSortedMajors() : degreeData.getSortedMinors();
+    if (!degrees || !Array.isArray(degrees) || (degrees.length === 0 && type === "Major")) {
+        showToast("Could not parse " + type + "s list in URL", "error");
+        return false;
+    }
+    if (!degrees.every(degree => typeof degree == "string" && validDegrees.indexOf(degree) !== -1)) {
+        showToast(type + " list contains an invalid major", "error");
+        return false;
+    }
+    return true;
 }
 
 class App extends React.Component {

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import CourseList, { listIdToTitle } from './CourseList';
+import CourseList, { listIdToTitle, MAX_COURSE_LENGTH } from './CourseList';
 import { DraggableItem } from './CourseList';
 import degreeData from './DegreeData';
 import { _ } from 'lodash';
@@ -60,9 +60,6 @@ type ListId = "lowerDivList" | "upperDivList" | "breadthList" | "minorList" |
 /* State and Cache functions */
 
 const getInitialState = (majors: Array<string>, minors: Array<string>, prevState?: SchedulerState): SchedulerState => {
-    if (window.location.search.length > 0) {
-        return getStateFromURL();
-    }
     let state: SchedulerState = {
         draggedItem: undefined,
         clickedItem: undefined,
@@ -167,25 +164,6 @@ const copyState = (state: SchedulerState): SchedulerState => {
     }
 }
 
-const getStateFromURL = (): SchedulerState => {
-    const queryString = window.location.search;
-    let u = new URLSearchParams(queryString);
-    let state = {};
-    let keys = ["majors", "minors", "fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
-    keys.forEach(key => {
-        if (u.has(key)) {
-            let list: Array<string> = JSON.parse(u.get(key));
-            state[key] = list;
-        } else {
-            state[key] = [];
-        }
-    });
-    let newState = constructStateFromSchedule(state);
-    cacheState(getCacheKey(newState.majors, newState.minors), newState);
-    window.location.search = "";
-    return newState;
-}
-
 const constructStateFromSchedule = (state: Partial<SchedulerState>): SchedulerState => {
     let newState: SchedulerState = {
         draggedItem: undefined,
@@ -238,6 +216,9 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     /* State functions */
 
     static getDerivedStateFromProps(nextProps: SchedulerProperties, prevState: SchedulerState) {
+        if (window.location.search.length > 0) {
+            return SchedulerContainer.getStateFromURL(nextProps);
+        }
         if(!(_.isEqual([...nextProps.majors].sort(), [...prevState.majors].sort()) && 
             (_.isEqual([...nextProps.minors].sort(), [...prevState.minors].sort())))) {
             return getInitialState(nextProps.majors, nextProps.minors, prevState);
@@ -254,6 +235,42 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             return true;
         }
         return false;
+    }
+
+    static getStateFromURL = (props: SchedulerProperties): SchedulerState => {
+        const queryString = window.location.search;
+        let u = new URLSearchParams(queryString);
+        let isError = false;
+        let state = {
+            majors: props.majors,
+            minors: props.minors
+        };
+        let keys = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        keys.forEach(key => {
+            if (u.has(key)) {
+                try {
+                    let list: Array<string> = JSON.parse(u.get(key));
+                    if (!list || !Array.isArray(list) || 
+                        !list.every(course => typeof course === "string" && course.length <= MAX_COURSE_LENGTH)) {
+                        showToast("Schedule lists cannot be parsed", "error");
+                        isError = true;
+                    }
+                    state[key] = list;
+                } catch (err) {
+                    showToast("URL cannot be parsed", "error");
+                    isError = true;
+                }
+            } else {
+                state[key] = [];
+            }
+        });
+        if (isError) {
+            return getInitialState(state.majors, state.minors);
+        }
+        let newState = constructStateFromSchedule(state);
+        cacheState(getCacheKey(newState.majors, newState.minors), newState);
+        window.location.search = "";
+        return newState;
     }
 
     downloadStateAsJSON = () => {

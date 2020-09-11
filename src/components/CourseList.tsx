@@ -8,6 +8,7 @@ import { showToast } from '../functions/helperFunctions';
 
 /* Constants */
 
+const MAX_COURSE_LENGTH = 40;
 const MAX_INPUT_LENGTH = 20;
 
 /* Type Declarations */
@@ -350,4 +351,4 @@ class CourseList extends React.Component<ListProperties> {
 
 
 export default CourseList;
-export { DraggableItem, listIdToTitle };
+export { DraggableItem, listIdToTitle, MAX_COURSE_LENGTH };
