@@ -14,6 +14,7 @@ import { toast } from 'react-toastify';
 /* Constants */
 
 const MAX_URL_LENGTH = 94;
+const MAX_NUM_COURSES = 10;
 const BASE_URL = "https://scheduleberkeley.com/";
 
 /* Type Declarations */
@@ -250,7 +251,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             if (u.has(key)) {
                 try {
                     let list: Array<string> = JSON.parse(u.get(key));
-                    if (!list || !Array.isArray(list) || 
+                    if (!list || !Array.isArray(list) || list.length > MAX_NUM_COURSES ||
                         !list.every(course => typeof course === "string" && course.length <= MAX_COURSE_LENGTH)) {
                         showToast("Schedule lists cannot be parsed", "error");
                         isError = true;
@@ -408,9 +409,13 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
             }
         } else {
             if (source !== dest) {
-                let courseListName = listIdToTitle[courseType];
-                let listName = listIdToTitle[dest];
-                showToast("Cannot move " + courseListName + " course to " + listName, "error");
+                if (!SchedulerContainer.isClassList(dest) && this.state[dest].length >= MAX_NUM_COURSES) {
+                    showToast("Semester cannot have more than " + MAX_NUM_COURSES + " courses", "error");
+                } else {
+                    let courseListName = listIdToTitle[courseType];
+                    let listName = listIdToTitle[dest];
+                    showToast("Cannot move " + courseListName + " course to " + listName, "error");
+                }
             }
         }
     }
@@ -425,8 +430,8 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     isValidMovement = (source: ListId, dest: ListId, course: string): boolean => {
         return (
-            (!SchedulerContainer.isClassList(dest) || 
-                dest === this.getOriginalListId(course))
+            (!SchedulerContainer.isClassList(dest) && this.state[dest].length < MAX_NUM_COURSES) || 
+                dest === this.getOriginalListId(course)
         )
     }
 
