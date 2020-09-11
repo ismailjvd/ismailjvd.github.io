@@ -59,7 +59,7 @@ type ListId = "lowerDivList" | "upperDivList" | "breadthList" | "minorList" |
 
 /* State and Cache functions */
 
-const getInitialState = (majors: Array<string>, minors: Array<string>): SchedulerState => {
+const getInitialState = (majors: Array<string>, minors: Array<string>, prevState?: SchedulerState): SchedulerState => {
     if (window.location.search.length > 0) {
         return getStateFromURL();
     }
@@ -83,10 +83,15 @@ const getInitialState = (majors: Array<string>, minors: Array<string>): Schedule
         fa4List: [],
         sp4List: []
     }
-    const cacheKey: string = getCacheKey(majors, minors);
+    let cacheKey: string = getCacheKey(majors, minors);
     if (localStorage[cacheKey]) {
         state = getStateFromCache(cacheKey);
         // Ensures there are no duplicates in any of the class lists
+        state = constructStateFromSchedule(state);
+    } else if (prevState && canUsePrevState(prevState, majors)) {
+        state = copyState(prevState);
+        state.majors = majors;
+        state.minors = minors;
         state = constructStateFromSchedule(state);
     } else {
         state.lowerDivList = degreeData.getSortedLowerDivs(majors)
@@ -103,6 +108,20 @@ const getInitialState = (majors: Array<string>, minors: Array<string>): Schedule
         state.sp4List = []
     }
     return state;
+}
+
+// Can preserve state on adding major/minor, changing last major, or changing minor
+const canUsePrevState = (prevState: SchedulerState, majors: Array<string>) => {
+    return (
+        (_.isEqual(prevState.majors, majors) 
+            || _.isEqual([...majors].slice(0, majors.length-1), prevState.majors) 
+            || (majors.length > 1
+                && 
+                _.isEqual([...majors].slice(0, majors.length-1), 
+                    [...prevState.majors].slice(0, prevState.majors.length-1))
+                )
+        )
+    )
 }
 
 const removeFromCache = (key: string) => {
@@ -218,10 +237,10 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     /* State functions */
 
-    static getDerivedStateFromProps(nextProps, prevState) {
+    static getDerivedStateFromProps(nextProps: SchedulerProperties, prevState: SchedulerState) {
         if(!(_.isEqual([...nextProps.majors].sort(), [...prevState.majors].sort()) && 
             (_.isEqual([...nextProps.minors].sort(), [...prevState.minors].sort())))) {
-            return getInitialState(nextProps.majors, nextProps.minors);
+            return getInitialState(nextProps.majors, nextProps.minors, prevState);
         }
         return null;
     }
