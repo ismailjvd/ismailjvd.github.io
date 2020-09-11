@@ -1,6 +1,7 @@
 import data from '.././assets/data/degrees.json';
 import { _, union } from 'lodash';
 import { ListData } from './SchedulerContainer';
+import { ResourceProps, DegreeWithResources } from './ResourceContainer.js';
 
 class DegreeData {
     private static instance: DegreeData;
@@ -83,6 +84,41 @@ class DegreeData {
             d[course] = "minorList";
         })
         return d;
+    }
+
+    getResources = (majors: Array<string>, minors: Array<string>) => {
+        let resourcesList: Array<DegreeWithResources> = [];
+        majors.forEach(major => {
+            let resources = data.majors[major].resources;
+            let list: Array<ResourceProps> = [];
+            for (const resourceTitle in resources) {
+                list.push({
+                    title: resourceTitle,
+                    link: resources[resourceTitle].link,
+                    description: resources[resourceTitle].description
+                })
+            }
+            resourcesList.push({
+                degree: major,
+                resources: [...list]
+            })
+        });
+        minors.forEach(minor => {
+            let resources = data.majors[minor].resources;
+            let list: Array<ResourceProps> = [];
+            for (const resourceTitle in resources) {
+                list.push({
+                    title: resourceTitle,
+                    link: resources[resourceTitle].link,
+                    description: resources[resourceTitle].description
+                })
+            }
+            resourcesList.push({
+                degree: minor,
+                resources: [...list]
+            })
+        })
+        return resourcesList;
     }
 }
 

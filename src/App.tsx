@@ -3,6 +3,7 @@ import { render } from 'react-dom';
 
 import Header from './components/Header';
 import DegreeSelector from "./components/DegreeSelector";
+import ResourceContainer from './components/ResourceContainer';
 import SchedulerContainer from "./components/SchedulerContainer";
 import degreeData from "./components/DegreeData";
 import Modal from './components/Modal';
@@ -10,6 +11,7 @@ import { ToastContainer } from 'react-toastify';
 
 import "./assets/style/App.css";
 import "./assets/style/Header.css";
+import "./assets/style/ResourceContainer";
 import "./assets/style/DegreeSelector.css";
 import "./assets/style/SchedulerContainer.css";
 import "./assets/style/CourseList.css";
@@ -100,6 +102,10 @@ class App extends React.Component {
                     majors={[...state.majors]} 
                     minors={[...state.minors]}
                     updateParent={this.updateChosenDegrees}
+                />
+                <ResourceContainer
+                    majors={[...state.majors]}
+                    minors={[...state.minors]}
                 />
                 <SchedulerContainer 
                     majors={[...state.majors]} 
