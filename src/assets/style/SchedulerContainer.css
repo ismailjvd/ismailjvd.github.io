@@ -26,15 +26,35 @@
     overflow-y: scroll;
 }
 
+.year-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 44%;
+    margin: 16px 8px;
+    box-shadow: 0 1px 6px 0px #ccc;
+    border-radius: 4px;
+}
+
+.year-title {
+    font-size: 18px;
+    width: 100%;
+    padding: 4px;
+    background-color: #bbbbbb;
+    color: white;
+    text-align: center;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
 .year-container {
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-content: center;
-    width: 44%;
-    margin: 16px 8px;
-    padding: 4px;
-    box-shadow: 0 1px 6px 0px #ccc;
+    width: 100%;
+    margin: 0 4px;
 }
 
 .lists-title {
@@ -184,7 +204,7 @@
 }
 
 @media (max-width: 900px) {
-    .year-container {
+    .year-wrapper {
         width: 94%;
     }
     #schedule-lists-container {
@@ -208,7 +228,7 @@
         width: 91vw;
         margin-bottom: 16px;
     }
-    .year-container {
+    .year-wrapper {
         margin: 12px 8px;
     }
     .schedule-button {

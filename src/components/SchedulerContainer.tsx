@@ -446,36 +446,40 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     getYearContainers = (): Array<JSX.Element> => {
         const scheduleLists: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        const yearTitles: Array<string> = ["Freshman", "Sophomore", "Junior", "Senior"];
         let yearContainers: Array<JSX.Element> = [];
         for (let i=0;i<scheduleLists.length;i+=2) {
             yearContainers.push(
-                <div className="year-container" key={"container-"+scheduleLists[i]+"-"+scheduleLists[i+1]}>
-                    <CourseList 
-                        key={scheduleLists[i]}
-                        listId={scheduleLists[i]}
-                        courses={this.state[scheduleLists[i]]} 
-                        setDraggedItem={this.setDraggedItem}
-                        getDraggedItem={this.getDraggedItem}
-                        setClickedItem={this.setClickedItem}
-                        getClickedItem={this.getClickedItem}
-                        isValid={this.isValidMovement}
-                        moveItemToList={this.moveItemToList}
-                        getOriginalList={this.getOriginalListId}
-                        addClass={this.addClass}
-                    />
-                    <CourseList 
-                        key={scheduleLists[i+1]}
-                        listId={scheduleLists[i+1]}
-                        courses={this.state[scheduleLists[i+1]]} 
-                        setDraggedItem={this.setDraggedItem}
-                        getDraggedItem={this.getDraggedItem}
-                        setClickedItem={this.setClickedItem}
-                        getClickedItem={this.getClickedItem}
-                        isValid={this.isValidMovement}
-                        moveItemToList={this.moveItemToList}
-                        getOriginalList={this.getOriginalListId}
-                        addClass={this.addClass}
-                    />
+                <div className="year-wrapper" key={"container-"+scheduleLists[i]+"-"+scheduleLists[i+1]}>
+                    <div className="year-title">{yearTitles[i/2]}</div>
+                    <div className="year-container">
+                        <CourseList 
+                            key={scheduleLists[i]}
+                            listId={scheduleLists[i]}
+                            courses={this.state[scheduleLists[i]]} 
+                            setDraggedItem={this.setDraggedItem}
+                            getDraggedItem={this.getDraggedItem}
+                            setClickedItem={this.setClickedItem}
+                            getClickedItem={this.getClickedItem}
+                            isValid={this.isValidMovement}
+                            moveItemToList={this.moveItemToList}
+                            getOriginalList={this.getOriginalListId}
+                            addClass={this.addClass}
+                        />
+                        <CourseList 
+                            key={scheduleLists[i+1]}
+                            listId={scheduleLists[i+1]}
+                            courses={this.state[scheduleLists[i+1]]} 
+                            setDraggedItem={this.setDraggedItem}
+                            getDraggedItem={this.getDraggedItem}
+                            setClickedItem={this.setClickedItem}
+                            getClickedItem={this.getClickedItem}
+                            isValid={this.isValidMovement}
+                            moveItemToList={this.moveItemToList}
+                            getOriginalList={this.getOriginalListId}
+                            addClass={this.addClass}
+                        />
+                    </div>
                 </div>
             )
         }
