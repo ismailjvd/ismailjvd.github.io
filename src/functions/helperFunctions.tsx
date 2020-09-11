@@ -54,7 +54,12 @@ const showStartingToast = () => {
                 hideProgressBar: true,
                 closeOnClick: true,
                 progress: undefined,
-                toastId: "starting-toast"
+                toastId: "starting-toast",
+                onClose: () => {
+                    if (!localStorage["starting-toast"]) {
+                        localStorage["starting-toast"] = false;
+                    }
+                }
             })
         }
     }, 16000);

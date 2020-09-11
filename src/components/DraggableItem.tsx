@@ -26,8 +26,10 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
         if (!this.props.getClickedItem()) {
             this.props.setClickedItem(this);
             document.addEventListener("mousedown", this.handleOutsideClick);
-            if (toast.isActive("starting-toast")) {
-                toast.dismiss("starting-toast");
+            if (!localStorage["starting-toast"]) {
+                if (toast.isActive("starting-toast")) {
+                    toast.dismiss("starting-toast");
+                }
                 localStorage["starting-toast"] = "false";
             }
         }
@@ -43,8 +45,10 @@ export default class DraggableItem extends React.PureComponent<DraggableItemProp
     handleDragStart = () => {
         if (!this.props.getDraggedItem()) {
             this.props.setDraggedItem(this);
-            if (toast.isActive("starting-toast")) {
-                toast.dismiss("starting-toast");
+            if (!localStorage["starting-toast"]) {
+                if (toast.isActive("starting-toast")) {
+                    toast.dismiss("starting-toast");
+                }
                 localStorage["starting-toast"] = "false";
             }
         }
