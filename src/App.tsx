@@ -32,18 +32,14 @@ const getInitialState = (majors?: Array<string>, minors?: Array<string>) => {
     if (window.location.search.length > 0) {
         return getStateFromURL();
     }
-    let state = {
-        majors: [degreeData.getSortedMajors()[0]],
-        minors: [],
-        modal: undefined
-    }
+    let state = DEFAULT_STATE;
     if (localStorage["currState"]) {
         state = getStateFromCache("currState")
     }
-    if (majors) {
+    if (majors && validDegrees(majors, "Major")) {
         state.majors = majors;
     }
-    if (minors) {
+    if (minors && validDegrees(minors, "Minor")) {
         state.minors = minors;
     }
     return state;
@@ -55,7 +51,22 @@ const cacheState = (key, state) => {
 }
 
 const getStateFromCache = (key) => {
-    return JSON.parse(localStorage[key]);
+    try {
+        const cachedState = JSON.parse(localStorage[key]);
+        if (!("majors" in cachedState) || !("minors" in cachedState) || !validDegrees(cachedState["majors"], "Major") 
+            || !validDegrees(cachedState["minors"], "Minor")) {
+                console.log("could not parse current state in cache");
+                return DEFAULT_STATE;
+            }
+        return {
+            majors: cachedState["majors"],
+            minors: cachedState["minors"],
+            modal: undefined
+        }
+    } catch (err) {
+        console.log("could not parse current state in cache");
+        return DEFAULT_STATE;
+    }
 }
 
 const getStateFromURL = () => {
@@ -97,11 +108,11 @@ const getStateFromURL = () => {
 const validDegrees = (degrees: Array<string>, type: "Major" | "Minor"): boolean => {
     const validDegrees = type === "Major" ? degreeData.getSortedMajors() : degreeData.getSortedMinors();
     if (!degrees || !Array.isArray(degrees) || (degrees.length === 0 && type === "Major")) {
-        showToast("Could not parse " + type + "s list in URL", "error");
+        console.log("Could not parse " + type + "s list in");
         return false;
     }
     if (!degrees.every(degree => typeof degree == "string" && validDegrees.indexOf(degree) !== -1)) {
-        showToast(type + " list contains an invalid major", "error");
+        console.log(type + " list contains an invalid " + type);
         return false;
     }
     return true;
