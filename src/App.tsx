@@ -167,3 +167,5 @@ class App extends React.Component {
 
 const domContainer = document.querySelector("#main");
 render(<App />, domContainer)
+
+export { validDegrees }

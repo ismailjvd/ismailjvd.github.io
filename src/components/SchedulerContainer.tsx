@@ -9,6 +9,7 @@ import Modal from './Modal';
 import { ancestorHasClass, copyToClipboard, showToast } from '../functions/helperFunctions';
 import DeleteContainer from './DeleteContainer';
 import { toast } from 'react-toastify';
+import { validDegrees } from '../App';
 
 
 /* Constants */
@@ -16,6 +17,17 @@ import { toast } from 'react-toastify';
 const MAX_URL_LENGTH = 94;
 const MAX_NUM_COURSES = 10;
 const BASE_URL = "https://scheduleberkeley.com/";
+const BLANK_CACHED_STATE: CachedSchedulerState = {
+    fa1List: [],
+    sp1List: [],
+    fa2List: [],
+    sp2List: [],
+    fa3List: [],
+    sp3List: [],
+    fa4List: [],
+    sp4List: []
+}
+const SCHEDULE_LISTS: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
 
 /* Type Declarations */
 
@@ -54,24 +66,151 @@ type SchedulerState = {
     sp4List: Array<string>
 }
 
+type CachedSchedulerState = {
+    fa1List: Array<string>,
+    sp1List: Array<string>,
+    fa2List: Array<string>,
+    sp2List: Array<string>,
+    fa3List: Array<string>,
+    sp3List: Array<string>,
+    fa4List: Array<string>,
+    sp4List: Array<string>
+}
+
 type ListId = "lowerDivList" | "upperDivList" | "breadthList" | "minorList" | 
                 "fa1List" | "sp1List" | "fa2List" | "sp2List" | "fa3List" | "sp3List" | 
                 "fa4List" | "sp4List" | "custom";
 
-/* State and Cache functions */
+/* Cache Functions */
 
-const getInitialState = (majors: Array<string>, minors: Array<string>, prevState?: SchedulerState): SchedulerState => {
-    let state: SchedulerState = {
+const getCacheKey = (majors: Array<string>, minors: Array<string>) => {
+    majors = [...majors].sort();
+    minors = [...minors].sort();
+    const degrees = JSON.stringify(majors) + ";" + JSON.stringify(minors);
+    return degrees;
+}
+
+const existsInCache = (majors: Array<string>, minors: Array<string>): boolean => {
+    return localStorage[getCacheKey([...majors], [...minors])] ? true : false;
+}
+
+// state is a valid CachedSchedulerState
+const cacheState = (key: string, state: CachedSchedulerState) => {
+    localStorage[key] = JSON.stringify(state);
+}
+
+const removeFromCache = (key: string) => {
+    delete localStorage[key];
+}
+
+// Returns a valid SchedulerState, or null
+const getStateFromCache = (majors: Array<string>, minors: Array<string>): SchedulerState | null => {
+    let state: SchedulerState | null;
+    try {
+        const cachedState: CachedSchedulerState = JSON.parse(localStorage[getCacheKey([...majors], [...minors])]);
+        state = convertFromCachedState(getValidCachedState(cachedState), majors, minors);
+    } catch (err) {
+        console.log("Could not load state from cache: " + err.message);
+        state = null;
+    }
+    return state;
+}
+
+/* State and Cache Conversion functions */
+
+// Returns a valid CachedSchedulerState
+const getValidCachedState = (state: any): CachedSchedulerState => {
+    let newState = {...BLANK_CACHED_STATE};
+    if (typeof state === "object" && state !== null) {
+        const keys: Array<ListId> = SCHEDULE_LISTS;
+        keys.forEach(listId => {
+            if (!(listId in state)) {
+                newState[listId] = [];
+            } else {
+                let list: Array<string> = state[listId];
+                if (!SchedulerContainer.validScheduleList(list)) {
+                    if (Array.isArray(list) && list.every(course => typeof course === "string")) {
+                        let length = Math.min(list.length, MAX_NUM_COURSES);
+                        list = list.slice(0, length).map((course: string) => {
+                            return course.length > MAX_COURSE_LENGTH ? course.slice(0, MAX_COURSE_LENGTH) : course;
+                        })
+                    } else {
+                        list = [];
+                    }
+                }
+                newState[listId] = list;
+            }
+        })
+    }
+    return newState;
+}
+
+// cachedState: a valid CachedSchedulerState, majors / minors must be from SchedulerProperties
+const convertFromCachedState = (cachedState: CachedSchedulerState, majors: Array<string>, minors: Array<string>): SchedulerState => {
+    let newState: SchedulerState = {
         draggedItem: undefined,
         clickedItem: undefined,
         isMenuOpen: false,
         majors: majors,
         minors: minors,
         courseListMap: degreeData.createCourseListMap(majors, minors), 
-        lowerDivList: [],
-        upperDivList: [],
-        breadthList: [],
-        minorList: [],
+        lowerDivList: degreeData.getSortedLowerDivs(majors),
+        upperDivList: degreeData.getSortedUpperDivs(majors),
+        breadthList: degreeData.getSortedBreadths(majors, minors),
+        minorList: degreeData.getSortedMinorCourses(majors, minors),
+        fa1List: cachedState.fa1List,
+        sp1List: cachedState.sp1List,
+        fa2List: cachedState.fa2List,
+        sp2List: cachedState.sp2List,
+        fa3List: cachedState.fa3List,
+        sp3List: cachedState.sp3List,
+        fa4List: cachedState.fa4List,
+        sp4List: cachedState.sp4List
+    };
+
+    return getStateWithNoDuplicates(newState);
+}
+
+// state: a valid SchedulerState
+const convertToCachedState = (state: SchedulerState): CachedSchedulerState => {
+    return {
+        fa1List: state.fa1List,
+        sp1List: state.sp1List,
+        fa2List: state.fa2List,
+        sp2List: state.sp2List,
+        fa3List: state.fa3List,
+        sp3List: state.sp3List,
+        fa4List: state.fa4List,
+        sp4List: state.sp4List
+    }
+}
+
+/* State Functions */
+
+const getInitialState = (majors: Array<string>, minors: Array<string>, prevState?: SchedulerState): SchedulerState => {
+    let state: SchedulerState;
+    if (existsInCache(majors, minors)) {
+        state = getStateFromCache(majors, minors);
+        if (state) {
+            return state;
+        }
+    }
+    if (prevState && canUsePrevState(prevState, majors)) {
+        const partialState: CachedSchedulerState = convertToCachedState(prevState);
+        state = convertFromCachedState(partialState, majors, minors);
+        return state;
+    }
+    return {
+        draggedItem: undefined,
+        clickedItem: undefined,
+        isMenuOpen: false,
+        majors: majors,
+        minors: minors,
+        courseListMap: degreeData.createCourseListMap(majors, minors), 
+        lowerDivList: degreeData.getSortedLowerDivs(majors),
+        upperDivList: degreeData.getSortedUpperDivs(majors),
+        breadthList: degreeData.getSortedBreadths(majors, minors),
+        minorList: degreeData.getSortedMinorCourses(majors, minors),
         fa1List: [],
         sp1List: [],
         fa2List: [],
@@ -81,31 +220,6 @@ const getInitialState = (majors: Array<string>, minors: Array<string>, prevState
         fa4List: [],
         sp4List: []
     }
-    let cacheKey: string = getCacheKey(majors, minors);
-    if (localStorage[cacheKey]) {
-        state = getStateFromCache(cacheKey);
-        // Ensures there are no duplicates in any of the class lists
-        state = constructStateFromSchedule(state);
-    } else if (prevState && canUsePrevState(prevState, majors)) {
-        state = copyState(prevState);
-        state.majors = majors;
-        state.minors = minors;
-        state = constructStateFromSchedule(state);
-    } else {
-        state.lowerDivList = degreeData.getSortedLowerDivs(majors)
-        state.upperDivList = degreeData.getSortedUpperDivs(majors)
-        state.breadthList = degreeData.getSortedBreadths(majors, minors),
-        state.minorList = degreeData.getSortedMinorCourses(majors, minors),
-        state.fa1List = [],
-        state.sp1List = [],
-        state.fa2List = [],
-        state.sp2List = [],
-        state.fa3List = [],
-        state.sp3List = [],
-        state.fa4List = [],
-        state.sp4List = []
-    }
-    return state;
 }
 
 // Can preserve state on adding major/minor, changing last major, or changing minor
@@ -122,78 +236,11 @@ const canUsePrevState = (prevState: SchedulerState, majors: Array<string>) => {
     )
 }
 
-const removeFromCache = (key: string) => {
-    delete localStorage[key];
-}
-
-const cacheState = (key: string, state: SchedulerState) => {
-    localStorage[key] = JSON.stringify(state);
-}
-
-const getStateFromCache = (key: string): SchedulerState => {
-    const state: SchedulerState = JSON.parse(localStorage[key]);
-    return state;
-}
-
-const getCacheKey = (majors: Array<string>, minors: Array<string>) => {
-    majors = [...majors].sort();
-    minors = [...minors].sort();
-    const degrees = JSON.stringify(majors) + ";" + JSON.stringify(minors);
-    return degrees;
-}
-
-const copyState = (state: SchedulerState): SchedulerState => {
-    return {
-        draggedItem: undefined,
-        clickedItem: undefined,
-        isMenuOpen: false,
-        majors: [...state.majors],
-        minors: [...state.minors],
-        courseListMap: {...state.courseListMap},
-        lowerDivList: [...state.lowerDivList],
-        upperDivList: [...state.upperDivList],
-        breadthList: [...state.breadthList],
-        minorList: [...state.minorList],
-        fa1List: [...state.fa1List],
-        sp1List: [...state.sp1List],
-        fa2List: [...state.fa2List],
-        sp2List: [...state.sp2List],
-        fa3List: [...state.fa3List],
-        sp3List: [...state.sp3List],
-        fa4List: [...state.fa4List],
-        sp4List: [...state.sp4List]
-    }
-}
-
-const constructStateFromSchedule = (state: Partial<SchedulerState>): SchedulerState => {
-    let newState: SchedulerState = {
-        draggedItem: undefined,
-        clickedItem: undefined,
-        isMenuOpen: false,
-        majors: state.majors,
-        minors: state.minors,
-        courseListMap: degreeData.createCourseListMap(state.majors, state.minors), 
-        lowerDivList: degreeData.getSortedLowerDivs(state.majors),
-        upperDivList: degreeData.getSortedUpperDivs(state.majors),
-        breadthList: degreeData.getSortedBreadths(state.majors, state.minors),
-        minorList: degreeData.getSortedMinorCourses(state.majors, state.minors),
-        fa1List: state.fa1List,
-        sp1List: state.sp1List,
-        fa2List: state.fa2List,
-        sp2List: state.sp2List,
-        fa3List: state.fa3List,
-        sp3List: state.sp3List,
-        fa4List: state.fa4List,
-        sp4List: state.sp4List
-    };
-
-    return getStateWithNoDuplicates(newState);
-}
-
+// state is a valid SchedulerState.
 const getStateWithNoDuplicates = (state: SchedulerState): SchedulerState => {
-    let newState = copyState(state);
+    let newState = {...state};
     let scheduleCourses: Array<string> = [];
-    let scheduleLists = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+    let scheduleLists = SCHEDULE_LISTS;
     scheduleLists.forEach(listId => {
         let list = newState[listId];
         scheduleCourses = [...scheduleCourses].concat([...list]);
@@ -229,53 +276,39 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     state = getInitialState(this.props.majors, this.props.minors);
 
-    isSchedulerState(state: any): state is SchedulerState {
-        /* TODO: develop more accurate scheduler state checking system */
-        let s = state as SchedulerState;
-        if (s.majors && s.minors) {
-            return true;
-        }
-        return false;
-    }
-
     static getStateFromURL = (props: SchedulerProperties): SchedulerState => {
         const queryString = window.location.search;
         let u = new URLSearchParams(queryString);
+        let keys = SCHEDULE_LISTS;
+        let partialState: CachedSchedulerState = BLANK_CACHED_STATE;
         let isError = false;
-        let state = {
-            majors: props.majors,
-            minors: props.minors
-        };
-        let keys = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
         keys.forEach(key => {
             if (u.has(key)) {
                 try {
                     let list: Array<string> = JSON.parse(u.get(key));
-                    if (!list || !Array.isArray(list) || list.length > MAX_NUM_COURSES ||
-                        !list.every(course => typeof course === "string" && course.length <= MAX_COURSE_LENGTH)) {
-                        showToast("Schedule lists cannot be parsed", "error");
+                    if (!SchedulerContainer.validScheduleList(list)) {
+                        console.log("Schedule list could not be parsed", "error");
                         isError = true;
                     }
-                    state[key] = list;
+                    partialState[key] = list;
                 } catch (err) {
-                    showToast("URL cannot be parsed", "error");
+                    console.log("URL schedule list could not be parsed", "error");
                     isError = true;
                 }
-            } else {
-                state[key] = [];
             }
         });
         if (isError) {
-            return getInitialState(state.majors, state.minors);
+            window.location.search = "";
+            return getInitialState(props.majors, props.minors);
         }
-        let newState = constructStateFromSchedule(state);
-        cacheState(getCacheKey(newState.majors, newState.minors), newState);
+        let newState = convertFromCachedState(partialState, props.majors, props.minors);
+        cacheState(getCacheKey([...newState.majors], [...newState.minors]), partialState);
         window.location.search = "";
         return newState;
     }
 
     downloadStateAsJSON = () => {
-        const jsonData = JSON.stringify(copyState(this.state));
+        const jsonData = JSON.stringify(this.state);
         const data = "text/json;charset=utf-8," + encodeURIComponent(jsonData);
         let a = document.createElement('a');
         a.href = "data:" + data;
@@ -298,17 +331,37 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         const reader = new FileReader();
         reader.onload = (event) => {
             try {
-                let newState = JSON.parse(event.target.result as string);
-                newState.draggedItem = undefined;
-                newState.clickedItem = undefined;
-                if (this.isSchedulerState(newState)) {
-                    cacheState(getCacheKey(newState.majors, newState.minors), newState);
-                    this.setState(newState);
-                    this.props.updateDegrees(newState.majors, newState.minors);
+                let state: SchedulerState = JSON.parse(event.target.result as string);
+                if (!("majors" in state) || !("minors" in state) || !validDegrees(state["majors"], "Major") 
+                    || !validDegrees(state["minors"], "Minor")) {
+                        showToast('Majors or minors in file have invalid format', 'error');
                 } else {
-                    showToast('Invalid file format', 'error');
+                    SCHEDULE_LISTS.forEach(listId => {
+                        if (!(listId in state)) {
+                            state[listId] = [];
+                        } else {
+                            let list = state[listId];
+                            if (!SchedulerContainer.validScheduleList(list)) {
+                                if (Array.isArray(list) && list.every(course => typeof course === "string")) {
+                                    let length = Math.min(list.length, MAX_NUM_COURSES);
+                                    list = list.slice(0, length).map((course: string) => {
+                                        return course.length > MAX_COURSE_LENGTH ? course.slice(0, MAX_COURSE_LENGTH) : course;
+                                    })
+                                } else {
+                                    list = [];
+                                }
+                            }
+                            state[listId] = [...list];
+                        }
+                    });
+                    let partialState: CachedSchedulerState = convertToCachedState(state);
+                    let newState: SchedulerState = convertFromCachedState(getValidCachedState(partialState), state.majors, state.minors);
+                    this.setState(newState);    // forces an update if file degrees match current state degrees
+                    cacheState(getCacheKey([...state.majors], [...state.minors]), partialState);
+                    this.props.updateDegrees([...state.majors], [...state.minors]);
+                    showToast("Successfully loaded schedule from file", "success");
                 }
-            } catch (SyntaxError) {
+            } catch (err) {
                 showToast('Invalid file format', 'error');
             }
         }
@@ -320,10 +373,10 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     getStringifiedScheduleState = () => {
         const state = {
-            majors: JSON.stringify(this.state.majors),
-            minors: JSON.stringify(this.state.minors),
+            majors: JSON.stringify(this.props.majors),
+            minors: JSON.stringify(this.props.minors),
         }
-        const scheduleLists: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        const scheduleLists: Array<ListId> = SCHEDULE_LISTS;
         scheduleLists.forEach(listId => {
             let list = this.state[listId];
             if (list.length > 0) {
@@ -349,17 +402,17 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     }
 
     updateLists = (source: ListId, dest: ListId, list1: Array<string>, list2: Array<string>) => {
-        let newState: SchedulerState = copyState(this.state);
+        let newState: SchedulerState = {...this.state};
         newState[source] = list1;
         newState[dest] = list2;
-        cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), newState);
+        cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), convertToCachedState(newState));
         this.setState(newState);
     }
 
     updateList(listId: ListId, list: Array<string>) {
-        let newState: SchedulerState = copyState(this.state);
+        let newState: SchedulerState = {...this.state};
         newState[listId] = list;
-        cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), newState);
+        cacheState(getCacheKey([...this.props.majors], [...this.props.minors]), convertToCachedState(newState));
         this.setState(newState);
     }
 
@@ -430,7 +483,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
 
     isValidMovement = (source: ListId, dest: ListId, course: string): boolean => {
         return (
-            (!SchedulerContainer.isClassList(dest) && this.state[dest].length < MAX_NUM_COURSES) || 
+            (!SchedulerContainer.isClassList(dest) && this.state[dest] && this.state[dest].length < MAX_NUM_COURSES) || 
                 dest === this.getOriginalListId(course)
         )
     }
@@ -440,8 +493,13 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
         return classLists.indexOf(listId) !== -1;
     }
 
+    static validScheduleList = (list: Array<string>) => {
+        return !(!list || !Array.isArray(list) || list.length > MAX_NUM_COURSES ||
+            !list.every(course => typeof course === "string" && course.length <= MAX_COURSE_LENGTH));
+    }
+
     addClass = (listId: ListId, course: string) => {
-        const scheduleLists: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        const scheduleLists: Array<ListId> = SCHEDULE_LISTS;
         let scheduleCourses: Array<string> = [];
         scheduleLists.forEach(listId => {
             let list = this.state[listId];
@@ -486,7 +544,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     }
 
     getYearContainers = (): Array<JSX.Element> => {
-        const scheduleLists: Array<ListId> = ["fa1List", "sp1List", "fa2List", "sp2List", "fa3List", "sp3List", "fa4List", "sp4List"];
+        const scheduleLists: Array<ListId> = SCHEDULE_LISTS;
         const yearTitles: Array<string> = ["Freshman", "Sophomore", "Junior", "Senior"];
         let yearContainers: Array<JSX.Element> = [];
         for (let i=0;i<scheduleLists.length;i+=2) {
@@ -591,7 +649,7 @@ class SchedulerContainer extends React.Component<SchedulerProperties> {
     }
 
     handleDeleteClick = () => {
-        const cacheKey = getCacheKey(this.props.majors, this.props.minors);
+        const cacheKey = getCacheKey([...this.props.majors], [...this.props.minors]);
         removeFromCache(cacheKey);
         this.setState(getInitialState(this.props.majors, this.props.minors));
     }
